@@ -1,2 +1,2 @@
 # V2
-OpenGL raphics engine
+OpenGL graphics engine
