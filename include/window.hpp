@@ -7,7 +7,6 @@ struct GLFWwindow;
 
 class Window {
 public:
-  Window();
   ~Window();
  
   bool init(glm::uvec2 size, const std::string &title);
