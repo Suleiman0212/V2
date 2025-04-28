@@ -4,6 +4,7 @@ sources = [
   'src/main.cpp',
   'src/log.cpp',
   'src/window.cpp',
+  'src/gfx.cpp',
   'src/glad/glad.c',
 ]
 include_dirs = ['include/']

@@ -15,6 +15,10 @@ namespace {
   }
 }
 
+void Window::make_context_current(Window *window) {
+  glfwMakeContextCurrent((window != nullptr)? window->glfw_handle : nullptr);
+}
+
 Window::~Window() {
   deinit();
 }
@@ -36,8 +40,8 @@ bool Window::init(glm::uvec2 size, const std::string &title) {
 #endif
   glfwWindowHint(GLFW_RESIZABLE, false);
   
-  window = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
-  if (window == nullptr) {
+  glfw_handle = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
+  if (glfw_handle == nullptr) {
     trace::error(std::format("Can't create {}x{} window: {}", size.x, size.y, get_glfw_error()));
     return false;
   }
@@ -47,15 +51,15 @@ bool Window::init(glm::uvec2 size, const std::string &title) {
 
 bool Window::poll_events() {
   glfwPollEvents();
-  return !glfwWindowShouldClose(window);
+  return !glfwWindowShouldClose(glfw_handle);
 }
 
 void Window::present() {
-  glfwSwapBuffers(window);
+  glfwSwapBuffers(glfw_handle);
 }
 
 void Window::deinit() {
-  if (window != nullptr) glfwDestroyWindow(window);
+  if (glfw_handle != nullptr) glfwDestroyWindow(glfw_handle);
   if (glfw_ref_count > 0) {
     glfw_ref_count--;
     if (glfw_ref_count == 0) glfwTerminate();

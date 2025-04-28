@@ -7,6 +7,8 @@ struct GLFWwindow;
 
 class Window {
 public:
+  static void make_context_current(Window *window);
+
   ~Window();
  
   bool init(glm::uvec2 size, const std::string &title);
@@ -16,5 +18,5 @@ public:
 private:
   void deinit();
 
-  GLFWwindow *window = nullptr;
+  GLFWwindow *glfw_handle = nullptr;
 };
