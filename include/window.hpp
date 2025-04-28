@@ -12,6 +12,9 @@ public:
   bool init(glm::uvec2 size, const std::string &title);
 
   bool poll_events();
+  void present();
 private:
+  void deinit();
+
   GLFWwindow *window = nullptr;
 };
