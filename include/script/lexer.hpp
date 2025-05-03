@@ -51,11 +51,13 @@ struct Token {
 
 	TokenType type;
 	std::variant<std::monostate, double, std::string> value;
+	int line, col;
 };
 
 class Lexer {
 public:
 	static std::optional<std::vector<Token>> tokenize(std::string_view source);
+	static std::optional<std::vector<Token>> tokenize_file(const std::string &filename);
 private:
 	Lexer(std::string_view source);
 
@@ -67,16 +69,24 @@ private:
 	Token emit(TokenType type);
 	Token emit(TokenType type, double value);
 	Token emit(TokenType type, std::string_view value);
-
+	
 	bool is_eof();
 	char peek();
 	char peek_prev();
 	char peek_next();
-
+	
 	char next();
 	bool match(char ch);
-
+	
+	bool has_error();
+	void throw_error(std::string_view msg);
+	
 	std::string_view source;
 	size_t pos = 0;
-	size_t token_pos = 0;
+	int line = 1, col = 1;
+
+	size_t token_pos;
+	int token_line, token_col;
+
+	bool error_flag = false;
 };

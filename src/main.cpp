@@ -10,7 +10,7 @@ int main() {
   Window window("V2", 900, 900);
   Renderer renderer(window);
 
-  auto tokens = Lexer::tokenize("%");
+  auto tokens = Lexer::tokenize_file("script.v2s");
 
   trace::info("Window created, Renderer created.");
 
