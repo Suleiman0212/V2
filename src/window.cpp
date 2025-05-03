@@ -22,7 +22,7 @@ Window::Window(std::string title, uint32_t width, uint32_t height) {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-  window = glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr);
+  window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
   if (window == nullptr) {
     trace::error("Failed to create window");
     glfwTerminate();
