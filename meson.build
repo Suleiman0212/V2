@@ -1,0 +1,20 @@
+project('opengl', ['c', 'cpp'])
+
+sources = [
+  'src/main.cpp',
+  'src/log.cpp',
+  'src/window.cpp',
+  'src/shader.cpp',
+  'src/quad.cpp',
+  'src/render.cpp',
+  'src/texture.cpp',
+  'src/glad/glad.c',
+]
+include_dirs = ['include/']
+depends = [dependency('glfw3')]
+
+executable('app', sources,
+  cpp_args: '-std=c++20',
+  include_directories: include_dirs,
+  dependencies: depends,
+)
