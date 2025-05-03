@@ -112,31 +112,31 @@ std::optional<Token> Lexer::read_string() {
   // TODO: escape sequences
   while (!is_eof() && peek() != '\n' && peek() != '\"') next();
 
-	if (peek() != '\"') {
+  if (peek() != '\"') {
     throw_error("unclosed quotes");
     next();
     return std::nullopt;
   }
 
-	std::string_view str = source.substr(token_pos + 1, pos - token_pos - 1);
-	next();
-	return emit(TokenType::StringLiteral, str);
+  std::string_view str = source.substr(token_pos + 1, pos - token_pos - 1);
+  next();
+  return emit(TokenType::StringLiteral, str);
 }
 
 Token Lexer::read_identifier() {
   while (isalnum(peek()) || peek() == '_') next();
 
-	std::string_view identifier = source.substr(token_pos, pos - token_pos);
-	if (identifier == "else") {
-		return emit(TokenType::Else);
-	} else if (identifier == "fn") {
-		return emit(TokenType::Fn);
-	} else if (identifier == "let") {
-		return emit(TokenType::Let);
-	} else if (identifier == "if") {
-		return emit(TokenType::If);
-	}
-	return emit(TokenType::Identifier, identifier);
+  std::string_view identifier = source.substr(token_pos, pos - token_pos);
+  if (identifier == "else") {
+    return emit(TokenType::Else);
+  } else if (identifier == "fn") {
+    return emit(TokenType::Fn);
+  } else if (identifier == "let") {
+    return emit(TokenType::Let);
+  } else if (identifier == "if") {
+    return emit(TokenType::If);
+  }
+  return emit(TokenType::Identifier, identifier);
 }
 
 Token Lexer::emit(TokenType type) {
