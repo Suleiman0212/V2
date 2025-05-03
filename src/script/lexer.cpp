@@ -29,26 +29,26 @@ again:
             if (match('=')) return emit(TokenType::NotEq);
             return emit(TokenType::Not);
         case '+':
-			if (match('=')) return emit(TokenType::PlusAssign);
-			return emit(TokenType::Plus);
-		case '-':
-			if (match('=')) return emit(TokenType::MinusAssign);
-			return emit(TokenType::Minus);
-		case '*':
-			if (match('=')) return emit(TokenType::StarAssign);
-			return emit(TokenType::Star);
-		case '/':
-			if (match('=')) return emit(TokenType::SlashAssign);
-			return emit(TokenType::Slash);
-		case '=': 
-			if (match('=')) return emit(TokenType::Eq);
-			return emit(TokenType::Assign);
-		case '<':
-			if (match('=')) return emit(TokenType::LessEq);
-			return emit(TokenType::Less);
-		case '>':
-			if (match('=')) return emit(TokenType::GreaterEq);
-			return emit(TokenType::Greater);
+            if (match('=')) return emit(TokenType::PlusAssign);
+            return emit(TokenType::Plus);
+        case '-':
+            if (match('=')) return emit(TokenType::MinusAssign);
+            return emit(TokenType::Minus);
+        case '*':
+            if (match('=')) return emit(TokenType::StarAssign);
+            return emit(TokenType::Star);
+        case '/':
+            if (match('=')) return emit(TokenType::SlashAssign);
+            return emit(TokenType::Slash);
+        case '=': 
+            if (match('=')) return emit(TokenType::Eq);
+            return emit(TokenType::Assign);
+        case '<':
+            if (match('=')) return emit(TokenType::LessEq);
+            return emit(TokenType::Less);
+        case '>':
+            if (match('=')) return emit(TokenType::GreaterEq);
+            return emit(TokenType::Greater);
         case ',': return emit(TokenType::Comma);
         case ':': return emit(TokenType::Colon);
         case ';': return emit(TokenType::Semicolon);
@@ -72,19 +72,19 @@ again:
 std::optional<Token> Lexer::read_number() {
     while (isdigit(peek())) next();
 
-	if (peek() == '.' && isdigit(peek_next())) {
-		// decimal
-		next();
-		while (isdigit(peek())) next();
-	}
+    if (peek() == '.' && isdigit(peek_next())) {
+        // decimal
+        next();
+        while (isdigit(peek())) next();
+    }
 
-	double value;
-	auto conv_result = std::from_chars(source.data() + token_pos, source.data() + pos, value);
-	if (conv_result.ec != std::errc()) {
+    double value;
+    auto conv_result = std::from_chars(source.data() + token_pos, source.data() + pos, value);
+    if (conv_result.ec != std::errc()) {
         trace::error("malformed number");
         return std::nullopt;
     }
-	return emit(TokenType::NumberLiteral, value);
+    return emit(TokenType::NumberLiteral, value);
 }
 
 Token Lexer::emit(TokenType type) {
@@ -125,6 +125,6 @@ char Lexer::next() {
 
 bool Lexer::match(char ch) {
     if (peek() != ch) return false;
-	next();
-	return true;
+    next();
+    return true;
 }
