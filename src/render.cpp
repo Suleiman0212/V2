@@ -13,6 +13,15 @@ struct Vertex {
   glm::vec2 tex_coords;
 };
 
+const std::array verts{
+    Vertex(glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f)), // top right
+    Vertex(glm::vec2(1.0, 1.0f), glm::vec2(1.0f, 0.0f)),  // bottom right
+    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f)), // top left
+    Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 0.0f)), // bottom right
+    Vertex(glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f)), // bottom left
+    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f))  // top left
+};
+
 Renderer::Renderer(Window &window)
     : shader("shaders/vertex.glsl", "shaders/fragment.glsl") {
   update_projection(window);
@@ -30,6 +39,8 @@ Renderer::Renderer(Window &window)
                         (void *)offsetof(Vertex, tex_coords));
   glEnableVertexAttribArray(1);
 
+  glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(),
+               GL_STREAM_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glBindVertexArray(0);
@@ -51,22 +62,13 @@ void Renderer::draw_quad(const Quad &quad) {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   shader.use();
   glBindVertexArray(VAO);
-  std::array verts{
-      Vertex(glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f)), // top right
-      Vertex(glm::vec2(1.0, 1.0f), glm::vec2(1.0f, 0.0f)),  // bottom right
-      Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f)), // top left
-      Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 0.0f)), // bottom right
-      Vertex(glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f)), // bottom left
-      Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f))  // top left
-  };
 
   shader.use();
   glUniformMatrix4fv(glGetUniformLocation(shader.program, "model"), 1, GL_FALSE,
                      glm::value_ptr(quad.model()));
 
   glBindTexture(GL_TEXTURE_2D, quad.texture.id);
-  glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(),
-               GL_STREAM_DRAW);
+
   glDrawArrays(GL_TRIANGLES, 0, verts.size());
 }
 
