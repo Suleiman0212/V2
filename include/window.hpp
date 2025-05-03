@@ -1,22 +1,28 @@
 #pragma once
-
+#include <functional>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <string>
 
-struct GLFWwindow;
+using WindowFramebufferCallback = std::function<void(int width, int height)>;
 
 class Window {
 public:
-  static void make_context_current(Window *window);
-
+  Window(std::string title, uint32_t width, uint32_t height);
   ~Window();
- 
-  bool init(glm::uvec2 size, const std::string &title);
 
-  bool poll_events();
-  void present();
+  bool running();
+  void clear(glm::vec4 color) const;
+  bool is_key_down(int key);
+
+  void get_framebuffer_size(int &width, int &height) const;
+
+  WindowFramebufferCallback framebuffer_callback = nullptr;
+
 private:
-  void deinit();
+  GLFWwindow *window;
 
-  GLFWwindow *glfw_handle = nullptr;
+  void events();
 };

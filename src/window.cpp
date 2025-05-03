@@ -1,67 +1,64 @@
-#define GLFW_INCLUDE_NONE
-#include "window.hpp"
-#include <format>
-#include <GLFW/glfw3.h>
+#include "include/window.hpp"
+#include "include/glad/glad.h"
 #include "log.hpp"
+#include <GLFW/glfw3.h>
+#include <glm/fwd.hpp>
+#include <iostream>
 
-namespace {
-  size_t glfw_ref_count = 0;
-
-  const char *get_glfw_error() {
-    const char *error;
-    glfwGetError(&error);
-    if (error == nullptr) error = "";
-    return error;
-  }
+void framebuffer_size_callback(GLFWwindow *glfw_handle, int width, int height) {
+  Window *window = (Window *)glfwGetWindowUserPointer(glfw_handle);
+  glViewport(0, 0, width, height);
+  if (window->framebuffer_callback != nullptr)
+    window->framebuffer_callback(width, height);
 }
 
-void Window::make_context_current(Window *window) {
-  glfwMakeContextCurrent((window != nullptr)? window->glfw_handle : nullptr);
-}
-
-Window::~Window() {
-  deinit();
-}
-
-bool Window::init(glm::uvec2 size, const std::string &title) {
-  deinit();
-
-  if (!glfwInit()) {
-    trace::error(std::format("Can't init glfw3: {}", get_glfw_error()));
-    return false;
-  }
-  glfw_ref_count++;
-
+Window::Window(std::string title, uint32_t width, uint32_t height) {
+  glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
 #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-  glfwWindowHint(GLFW_RESIZABLE, false);
-  
-  glfw_handle = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
-  if (glfw_handle == nullptr) {
-    trace::error(std::format("Can't create {}x{} window: {}", size.x, size.y, get_glfw_error()));
-    return false;
-  }
 
-  return true;
+  window = glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr);
+  if (window == nullptr) {
+    trace::error("Failed to create window");
+    glfwTerminate();
+  }
+  glfwSetWindowUserPointer(window, this);
+  glfwMakeContextCurrent(window);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    trace::error("Failed to initialize opengl functions");
+  }
 }
 
-bool Window::poll_events() {
+Window::~Window() { glfwTerminate(); }
+
+bool Window::running() {
+  events();
+  return !glfwWindowShouldClose(window);
+}
+
+void Window::clear(glm::vec4 color) const {
+  glClearColor(color.r, color.g, color.b, 1.0f);
+  glfwSetWindowOpacity(window, color.a);
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
+bool Window::is_key_down(int key) {
+  return glfwGetKey(window, key) == GLFW_PRESS;
+}
+
+void Window::get_framebuffer_size(int &width, int &height) const {
+  glfwGetFramebufferSize(window, &width, &height);
+}
+
+void Window::events() {
+  glfwSwapBuffers(window);
   glfwPollEvents();
-  return !glfwWindowShouldClose(glfw_handle);
-}
-
-void Window::present() {
-  glfwSwapBuffers(glfw_handle);
-}
-
-void Window::deinit() {
-  if (glfw_handle != nullptr) glfwDestroyWindow(glfw_handle);
-  if (glfw_ref_count > 0) {
-    glfw_ref_count--;
-    if (glfw_ref_count == 0) glfwTerminate();
-  }
 }
