@@ -231,7 +231,7 @@ AstNodePtr Parser::binary(BinaryOp op, AstNodePtr &&lhs, AstNodePtr &&rhs, int l
   auto lhs_type = lhs->value_type,
        rhs_type = rhs->value_type;
   bool allow = true;
-  if (lhs_type == ScriptCellType::Void || rhs_type == ScriptCellType::Void) {
+  if (lhs_type == ScriptCellType::Void || rhs_type == ScriptCellType::Void || lhs_type != rhs_type) {
     allow = false;
   } else if (op != BinaryOp::Eq && op != BinaryOp::NotEq) {
     // arithmetic operator, only allow numbers
