@@ -1,4 +1,4 @@
-project('opengl', ['c', 'cpp'])
+project('v2', ['c', 'cpp'])
 
 sources = [
   'src/main.cpp',
