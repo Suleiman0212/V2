@@ -1,10 +1,51 @@
 #include "script/lexer.hpp"
 #include <charconv>
 #include <format>
-#include <fstream>
-#include <memory>
 #include <string>
 #include "log.hpp"
+
+std::string_view Token::type_name(TokenType type) {
+  switch (type) {
+    case TokenType::Eof: return "<eof>";
+
+    case TokenType::LeftParen: return "'('";
+    case TokenType::RightParen: return "')'";
+    case TokenType::LeftBrace: return "'{'";
+    case TokenType::RightBrace: return "'}'";
+
+    case TokenType::Not: return "'!'";
+    case TokenType::Plus: return "'+'";
+    case TokenType::Minus: return "'-'";
+    case TokenType::Star: return "'*'";
+    case TokenType::Slash: return "'/'";
+
+    case TokenType::Eq: return "'=='";
+    case TokenType::NotEq: return "'!='";
+    case TokenType::Less: return "'<'";
+    case TokenType::LessEq: return "'<='";
+    case TokenType::Greater: return "'>'";
+    case TokenType::GreaterEq: return "'>='";
+
+    case TokenType::Assign: return "'='";
+    case TokenType::PlusAssign: return "'+='";
+    case TokenType::MinusAssign: return "'-='";
+    case TokenType::StarAssign: return "'*='";
+    case TokenType::SlashAssign: return "'/='";
+
+    case TokenType::Comma: return "','";
+    case TokenType::Colon: return "':'";
+    case TokenType::Semicolon: return "';'";
+
+    case TokenType::Identifier: return "identifier";
+    case TokenType::Else: return "'else'";
+    case TokenType::Fn: return "'fn'";
+    case TokenType::Let: return "'let'";
+    case TokenType::If: return "'if'";
+    
+    case TokenType::NumberLiteral: return "number";
+    case TokenType::StringLiteral: return "string";
+  }
+}
 
 std::optional<std::vector<Token>> Lexer::tokenize(std::string_view source) {
   Lexer lexer(source);
@@ -12,24 +53,10 @@ std::optional<std::vector<Token>> Lexer::tokenize(std::string_view source) {
   while (auto token = lexer.next_token()) {
     tokens.emplace_back(std::move(*token));
   }
+  tokens.emplace_back(lexer.emit(TokenType::Eof));
 
   if (lexer.has_error()) return std::nullopt;
   return tokens;
-}
-
-std::optional<std::vector<Token>> Lexer::tokenize_file(const std::string &filename) {
-  std::ifstream stream(filename, std::ios_base::ate);
-  if (!stream.is_open()) {
-    trace::error(std::format("can't open file \"{}\"", filename));
-    return std::nullopt;
-  }
-
-  size_t len = stream.tellg();
-  stream.seekg(0);
-  auto source = std::make_unique<char[]>(len);
-  stream.read(source.get(), len);
-
-  return tokenize(std::string_view(source.get(), len));
 }
 
 Lexer::Lexer(std::string_view source): source(source) {}
@@ -194,6 +221,6 @@ bool Lexer::has_error() {
 }
 
 void Lexer::throw_error(std::string_view msg) {
-  trace::error(std::format("({}:{}) {}", token_line, token_col, msg));
+  trace::error(std::format("Lexer: ({};{}) {}", token_line, token_col, msg));
   error_flag = true;
 }

@@ -7,86 +7,91 @@
 #include <vector>
 
 enum class TokenType {
-	LeftParen,
-	RightParen,
-	LeftBrace,
-	RightBrace,
-	
-	Not,
-	Plus,
-	Minus,
-	Star,
-	Slash,
+  Eof,
 
-	Eq,
-	NotEq,
-	Less,
-	LessEq,
-	Greater,
-	GreaterEq,
-	
-	Assign,
-	PlusAssign,
-	MinusAssign,
-	StarAssign,
-	SlashAssign,
+  LeftParen,
+  RightParen,
+  LeftBrace,
+  RightBrace,
+  
+  Not,
+  Plus,
+  Minus,
+  Star,
+  Slash,
 
-	Comma,
-	Colon,
-	Semicolon,
+  Eq,
+  NotEq,
+  Less,
+  LessEq,
+  Greater,
+  GreaterEq,
+  
+  Assign,
+  PlusAssign,
+  MinusAssign,
+  StarAssign,
+  SlashAssign,
 
-	Identifier, // string value
-	Else,
-	Fn,
-	Let,
-	If,
+  Comma,
+  Colon,
+  Semicolon,
 
-	NumberLiteral, // double value
-	StringLiteral, // string value
+  Identifier, // string value
+  Else,
+  Fn,
+  Let,
+  If,
+
+  NumberLiteral, // double value
+  StringLiteral, // string value
 };
 
 struct Token {
-	double as_double() const { return std::get<double>(value); }
-	const std::string &as_string() const { return std::get<std::string>(value); }
+  static std::string_view type_name(TokenType type);
 
-	TokenType type;
-	std::variant<std::monostate, double, std::string> value;
-	int line, col;
+  std::string_view type_name() const { return type_name(type); }
+  double as_double() const { return std::get<double>(value); }
+  const std::string &as_string() const { return std::get<std::string>(value); }
+
+  TokenType type;
+  std::variant<std::monostate, double, std::string> value;
+  int line, col;
 };
 
 class Lexer {
 public:
-	static std::optional<std::vector<Token>> tokenize(std::string_view source);
-	static std::optional<std::vector<Token>> tokenize_file(const std::string &filename);
+  static std::optional<std::vector<Token>> tokenize(std::string_view source);
+
 private:
-	Lexer(std::string_view source);
+  Lexer(std::string_view source);
 
-	std::optional<Token> next_token();
-	std::optional<Token> read_number();
-	std::optional<Token> read_string();
-	Token read_identifier();
+  std::optional<Token> next_token();
+  std::optional<Token> read_number();
+  std::optional<Token> read_string();
+  Token read_identifier();
 
-	Token emit(TokenType type);
-	Token emit(TokenType type, double value);
-	Token emit(TokenType type, std::string_view value);
-	
-	bool is_eof();
-	char peek();
-	char peek_prev();
-	char peek_next();
-	
-	char next();
-	bool match(char ch);
-	
-	bool has_error();
-	void throw_error(std::string_view msg);
-	
-	std::string_view source;
-	size_t pos = 0;
-	int line = 1, col = 1;
+  Token emit(TokenType type);
+  Token emit(TokenType type, double value);
+  Token emit(TokenType type, std::string_view value);
+  
+  bool is_eof();
+  char peek();
+  char peek_prev();
+  char peek_next();
+  
+  char next();
+  bool match(char ch);
+  
+  bool has_error();
+  void throw_error(std::string_view msg);
+  
+  std::string_view source;
+  size_t pos = 0;
+  int line = 1, col = 1;
 
-	size_t token_pos;
-	int token_line, token_col;
+  size_t token_pos;
+  int token_line, token_col;
 
-	bool error_flag = false;
+  bool error_flag = false;
 };

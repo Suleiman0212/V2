@@ -10,6 +10,9 @@ sources = [
   'src/texture.cpp',
 
   'src/script/lexer.cpp',
+  'src/script/script.cpp',
+  'src/script/registry.cpp',
+  'src/script/parser.cpp',
 
   'src/glad/glad.c',
 ]
