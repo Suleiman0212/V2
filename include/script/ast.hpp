@@ -10,6 +10,7 @@ enum class AstNodeType {
   Literal,
   GetVar,
   SetVar,
+  DesStruct,
 
   Unary,
   Binary,
@@ -83,6 +84,21 @@ struct AstNodeSetVar: AstNode {
 
   size_t idx;
   AstNodePtr value;
+};
+
+struct AstNodeDesStruct: AstNode {
+  struct Field {
+    size_t setter_idx;
+    AstNodePtr value;
+  };
+
+  AstNodeDesStruct(size_t factory_idx, std::vector<Field> &&fields): AstNode(ScriptCellType::Number),
+    factory_idx(factory_idx), fields(std::move(fields)) {}
+
+  AstNodeType get_type() const override { return AstNodeType::DesStruct; }
+
+  size_t factory_idx;
+  std::vector<Field> fields;
 };
 
 struct AstNodeUnary: AstNode {

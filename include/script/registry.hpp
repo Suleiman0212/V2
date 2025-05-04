@@ -19,14 +19,35 @@ struct ScriptNativeFn {
   ScriptNativeFnPtr ptr;
 };
 
+struct ScriptDesStruct {
+  struct Field {
+    std::string name;
+    size_t setter_idx;
+  };
+
+  std::optional<size_t> lookup_field(std::string_view name) const;
+
+  std::string name;
+  size_t factory_idx;
+  std::vector<Field> fields;
+};
+
+struct ScriptDesField {
+  std::string_view name;
+  std::string_view setter_name;
+};
+
 class ScriptRegistry {
 public:
   void add_native_fn(std::string_view name, ScriptCellType return_type, std::initializer_list<ScriptCellType> param_types, ScriptNativeFnPtr fn);
+  void add_des_struct(std::string_view name, std::string_view factory_name, std::initializer_list<ScriptDesField> fields);
 
 private:
   std::optional<size_t> lookup_native_fn(std::string_view name) const;
+  std::optional<size_t> lookup_des_struct(std::string_view name) const;
 
   std::vector<ScriptNativeFn> native_fns;
+  std::vector<ScriptDesStruct> des_structs;
 
   friend class Parser;
   friend class ScriptVm;

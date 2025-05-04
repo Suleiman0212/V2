@@ -29,6 +29,7 @@ private:
     Var,
     Fn,
     NativeFn,
+    DesStruct,
   };
 
   Parser(std::span<const Token> tokens, Script &script);
@@ -56,6 +57,7 @@ private:
   }
 
   AstNodePtr unary(UnaryOp op, AstNodePtr &&value, int line = 0, int col = 0);
+  AstNodePtr des_struct(size_t idx);
   AstNodePtr fn_ref(bool native, size_t idx);
   AstNodePtr primary();
 

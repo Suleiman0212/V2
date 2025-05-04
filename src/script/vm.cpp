@@ -70,8 +70,8 @@ ScriptCell ScriptVm::eval(const AstNodePtr &node, size_t block_start_idx) {
         if (status == ScriptVmStatus::Yielded) {
           // save my state
           auto &blocks = frames_yield_blocks[frame_depth - 1];
-					blocks.emplace(blocks.begin(), &node, i);
-					break;
+          blocks.emplace(blocks.begin(), &node, i);
+          break;
         }
         eval(block->nodes[i]);
       }
@@ -95,6 +95,20 @@ ScriptCell ScriptVm::eval(const AstNodePtr &node, size_t block_start_idx) {
       ScriptCell value = eval(set_var->value);
       frame.vars[set_var->idx] = value;
       return value;
+    }
+    case AstNodeType::DesStruct: {
+      auto des_struct = static_cast<AstNodeDesStruct *>(node.get());
+
+      const auto &factory = script.registry.native_fns[des_struct->factory_idx];
+      auto factory_result = factory.ptr(*this, {});
+
+      // fields
+      for (const auto &field: des_struct->fields) {
+        const auto &setter = script.registry.native_fns[field.setter_idx];
+        setter.ptr(*this, std::array{factory_result, eval(field.value)});
+      }
+
+      return factory_result;
     }
     case AstNodeType::Unary: {
       auto unary = static_cast<AstNodeUnary *>(node.get());

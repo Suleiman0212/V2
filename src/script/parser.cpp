@@ -79,6 +79,9 @@ Parser::Symbol Parser::lookup_symbol(std::string_view name, size_t &idx) {
   } else if (auto fn_idx = script.lookup_fn(name)) {
     idx = *fn_idx;
     return Symbol::Fn;
+  } else if (auto des_struct_idx = script.registry.lookup_des_struct(name)) {
+    idx = *des_struct_idx;
+    return Symbol::DesStruct;
   } else {
     // variable?
     auto var_idx = util::index_of(vars.begin(), vars.end(), [name](const auto &x) {
@@ -99,6 +102,7 @@ std::string_view Parser::symbol_name(Symbol sym) {
     case Symbol::Var: return "variable";
     case Symbol::Fn: return "function";
     case Symbol::NativeFn: return "native function";
+    case Symbol::DesStruct: return "designated struct";
   }
   return "<?>";
 }
@@ -146,6 +150,49 @@ AstNodePtr Parser::unary(UnaryOp op, AstNodePtr &&value, int line, int col) {
   }
 
   return new_node<AstNodeUnary>(op, std::move(value));
+}
+
+AstNodePtr Parser::des_struct(size_t idx) {
+  const auto &des_struct = script.registry.des_structs[idx];
+  expect(TokenType::LeftBrace);
+
+  // fields
+  std::vector<AstNodeDesStruct::Field> fields;
+  while (!is_eof() && !check(TokenType::RightBrace)) {
+    if (!fields.empty()) expect(TokenType::Comma);
+    if (check(TokenType::RightBrace)) {
+      // extra comma!
+      break;
+    }
+
+    std::string_view field_name = "<?>";
+    size_t field_setter_idx;
+    ScriptCellType field_type = ScriptCellType::Void;
+    if (auto token = expect(TokenType::Identifier)) {
+      field_name = token->as_string();
+      if (auto field_idx = des_struct.lookup_field(field_name)) {
+        // ok, get the setter function & type
+        field_setter_idx = des_struct.fields[*field_idx].setter_idx;
+        field_type = script.registry.native_fns[field_setter_idx].param_types[1];
+      } else {
+        throw_error(std::format("no field \"{}\" in designated struct \"{}\"", field_name, des_struct.name),
+          token->line, token->col);
+      }
+    }
+
+    expect(TokenType::Colon);
+    const auto &value_token = peek();
+    AstNodePtr value = expr();
+    if (value->value_type != field_type) {
+      throw_error(std::format("can't init field \"{}\" (a {}) with a {}", field_name, cell_type_name(field_type), cell_type_name(value->value_type)),
+        value_token.line, value_token.col);
+    }
+
+    fields.emplace_back(field_setter_idx, std::move(value));
+  }
+  expect(TokenType::RightBrace);
+
+  return new_node<AstNodeDesStruct>(des_struct.factory_idx, std::move(fields));
 }
 
 AstNodePtr Parser::fn_ref(bool native, size_t idx) {
@@ -240,6 +287,7 @@ AstNodePtr Parser::primary() {
       case Symbol::Var: return new_node<AstNodeGetVar>(sym_idx, vars[sym_idx].type);
       case Symbol::Fn: return fn_ref(false, sym_idx);
       case Symbol::NativeFn: return fn_ref(true, sym_idx);
+      case Symbol::DesStruct: return des_struct(sym_idx);
     }
   } else if (match(TokenType::LeftParen)) {
     // grouping
