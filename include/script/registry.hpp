@@ -29,4 +29,5 @@ private:
   std::vector<ScriptNativeFn> native_fns;
 
   friend class Parser;
+  friend class ScriptVm;
 };

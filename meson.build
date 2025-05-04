@@ -13,6 +13,7 @@ sources = [
   'src/script/script.cpp',
   'src/script/registry.cpp',
   'src/script/parser.cpp',
+  'src/script/vm.cpp',
 
   'src/glad/glad.c',
 ]

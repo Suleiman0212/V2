@@ -99,8 +99,8 @@ std::string_view Parser::symbol_name(Symbol sym) {
     case Symbol::Var: return "variable";
     case Symbol::Fn: return "function";
     case Symbol::NativeFn: return "native function";
-    default: return "<?>";
   }
+  return "<?>";
 }
 
 std::string_view Parser::cell_type_name(ScriptCellType type) {
@@ -109,8 +109,17 @@ std::string_view Parser::cell_type_name(ScriptCellType type) {
     case ScriptCellType::Number: return "number";
     case ScriptCellType::String: return "string";
     case ScriptCellType::FnHandle: return "function handle";
-    default: return "<?>";
   }
+  return "<?>";
+}
+
+std::string_view Parser::unary_op_name(UnaryOp op) {
+  switch (op) {
+    case UnaryOp::Group: return "'()'";
+    case UnaryOp::Not: return "'!'";
+    case UnaryOp::Negate: return "'-'";
+  }
+  return "<?>";
 }
 
 std::string_view Parser::binary_op_name(BinaryOp op) {
@@ -126,9 +135,17 @@ std::string_view Parser::binary_op_name(BinaryOp op) {
     case BinaryOp::LessEq: return "<=";
     case BinaryOp::Greater: return ">";
     case BinaryOp::GreaterEq: return ">=";
-
-    default: return "<?>";
   }
+  return "<?>";
+}
+
+AstNodePtr Parser::unary(UnaryOp op, AstNodePtr &&value, int line, int col) {
+  if (value->value_type != ScriptCellType::Number) {
+    throw_error(std::format("can't perform unary {} on {}", unary_op_name(op), cell_type_name(value->value_type)),
+      line, col);
+  }
+
+  return new_node<AstNodeUnary>(op, std::move(value));
 }
 
 AstNodePtr Parser::fn_ref(bool native, size_t idx) {
@@ -208,6 +225,17 @@ AstNodePtr Parser::primary() {
     switch (sym) {
       case Symbol::None:
         throw_error(std::format("unknown identifier \"{}\"", identifier), token.line, token.col);
+        if (match(TokenType::LeftParen)) {
+          // non existent function, just eat this "call" up
+          bool first = true;
+          while (!is_eof() && !check(TokenType::RightParen)) {
+            if (!first) expect(TokenType::Comma);
+
+            next();
+            first = false;
+          }
+          expect(TokenType::RightParen);
+        }
         break;
       case Symbol::Var: return new_node<AstNodeGetVar>(sym_idx, vars[sym_idx].type);
       case Symbol::Fn: return fn_ref(false, sym_idx);
@@ -217,10 +245,14 @@ AstNodePtr Parser::primary() {
     // grouping
     AstNodePtr value = expr();
     expect(TokenType::RightParen);
-    return new_node<AstNodeUnary>(UnaryOp::Group, std::move(value));
+    return unary(UnaryOp::Group, std::move(value));
+  } else if (match(TokenType::Not)) {
+    return unary(UnaryOp::Not, primary());
+  } else if (match(TokenType::Minus)) {
+    return unary(UnaryOp::Negate, primary());
   } else {
     const auto &token = next();
-    throw_error(std::format("expected number, string or identifier; got {}", token.type_name()), token.line, token.col);
+    throw_error(std::format("expected number, string, identifier, '(', '!' or '-'; got {}", token.type_name()), token.line, token.col);
   }
 
   std::vector<AstNodePtr> dummy;
@@ -348,6 +380,30 @@ AstNodePtr Parser::expr() {
   return lhs;
 }
 
+AstNodePtr Parser::if_statement() {
+  const auto &cond_token = peek();
+  AstNodePtr cond = expr();
+  if (cond->value_type != ScriptCellType::Number) {
+    throw_error(std::format("can't use {} expression in if condition", cell_type_name(cond->value_type)), 
+      cond_token.line, cond_token.col);
+  }
+
+  expect(TokenType::LeftBrace);
+  AstNodePtr true_body = block(),
+             false_body = nullptr;
+  if (match(TokenType::Else)) {
+    if (match(TokenType::If)) {
+      // else if
+      false_body = if_statement();
+    } else {
+      expect(TokenType::LeftBrace);
+      false_body = block();
+    }
+  }
+
+  return new_node<AstNodeIf>(std::move(cond), std::move(true_body), std::move(false_body));
+}
+
 AstNodePtr Parser::var_decl() {
   std::string_view name = "<?>";
   if (auto token = expect(TokenType::Identifier)) {
@@ -399,6 +455,8 @@ AstNodePtr Parser::statement() {
     return block();
   } else if (match(TokenType::Let)) {
     return var_decl();
+  } else if (match(TokenType::If)) {
+    return if_statement();
   } else {
     // expression
     AstNodePtr node = expr();

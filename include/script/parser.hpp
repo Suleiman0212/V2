@@ -47,6 +47,7 @@ private:
   Symbol lookup_symbol(std::string_view name, size_t &idx);
   std::string_view symbol_name(Symbol sym);
   std::string_view cell_type_name(ScriptCellType type);
+  std::string_view unary_op_name(UnaryOp op);
   std::string_view binary_op_name(BinaryOp op);
 
   template<class T, class... Args>
@@ -54,6 +55,7 @@ private:
     return std::make_unique<T>(std::forward<Args>(params)...);
   }
 
+  AstNodePtr unary(UnaryOp op, AstNodePtr &&value, int line = 0, int col = 0);
   AstNodePtr fn_ref(bool native, size_t idx);
   AstNodePtr primary();
 
@@ -63,6 +65,7 @@ private:
   AstNodePtr test();
   AstNodePtr expr();
 
+  AstNodePtr if_statement();
   AstNodePtr var_decl();
   AstNodePtr block();
   AstNodePtr statement();

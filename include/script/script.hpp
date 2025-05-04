@@ -32,4 +32,5 @@ private:
   ScriptRegistry registry;
 
   friend class Parser;
+  friend class ScriptVm;
 };
