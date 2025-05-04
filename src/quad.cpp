@@ -5,6 +5,7 @@ Quad::Quad(glm::vec2 pos, glm::vec2 scale, Texture &texture)
     : texture(texture) {
   this->pos = pos;
   this->scale = scale;
+  this->origin = scale / 2.0f;
 }
 
 glm::mat4 Quad::model() const {

@@ -48,9 +48,9 @@ Renderer::Renderer(Window &window)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  window.framebuffer_callback = [&](int width, int height) {
-    update_projection(window);
-  };
+  // window.framebuffer_callback = [&](int width, int height) {
+  //   update_projection(window);
+  // };
 }
 
 Renderer::~Renderer() {
@@ -72,7 +72,7 @@ void Renderer::draw_quad(const Quad &quad) {
   glDrawArrays(GL_TRIANGLES, 0, verts.size());
 }
 
-void Renderer::draw_quads(const std::span<Quad> &quads) {
+void Renderer::draw_quads(const std::vector<Quad> &quads) {
   for (auto &quad : quads) {
     draw_quad(quad);
   }
