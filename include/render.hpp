@@ -3,7 +3,7 @@
 #include "quad.hpp"
 #include "shader.hpp"
 #include "window.hpp"
-#include <span>
+#include <vector>
 
 class Renderer {
 public:
@@ -11,7 +11,7 @@ public:
   ~Renderer();
 
   void draw_quad(const Quad &quad);
-  void draw_quads(const std::span<Quad> &quads);
+  void draw_quads(const std::vector<Quad> &quads);
   void update_projection(const Window &window);
 
 private:
