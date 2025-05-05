@@ -12,7 +12,8 @@
 #include <span>
 #include <string_view>
 
-const glm::vec4 background_color(0.4f, 0.3f, 0.5f, 1.0f);
+const glm::vec4 BACKGROUND_COLOR(153.0f / 250, 59.0f / 250, 80.0f / 250, 1.0f);
+const float QUAD_SPEED = 95;
 
 ScriptCell script_print_string(ScriptVm &vm, std::span<const ScriptCell> params) {
   trace::debug(vm.get_string(params[0]));
@@ -88,7 +89,7 @@ ScriptCell script_logger_print_string(ScriptVm &vm, std::span<const ScriptCell> 
 }
 
 int main() {
-  Window window("V2", 900, 900);
+  Window window("V2", 1280, 720);
   Renderer renderer(window);
 
   ScriptRegistry registry;
@@ -118,10 +119,18 @@ int main() {
 
   trace::info("Window created, Renderer created.");
 
-  Texture template_texture("textures/template.jpg");
-  Quad template_quad(glm::vec2(300.0f, 300.0f), glm::vec2(300.0f, 300.0f),
-                     template_texture);
-  template_quad.origin = glm::vec2(150, 150);
+  Texture background_texture("");
+  Quad background_quad(glm::vec2(0, 0), glm::vec2(1280, 720),
+                       background_texture);
+
+  Texture eye_texture(
+      "assets/textures/eye_of_providence/eye_of_providence.png");
+  Quad eye_quad(glm::vec2(1280 / 2 - 32 * 3, 64), glm::vec2(64 * 3, 64 * 3),
+                eye_texture);
+
+  Texture jesus_texture("assets/textures/jesus/jesus.png");
+  Quad jesus_quad(glm::vec2(1280 / 2 - 32 * 2, 64 + 500),
+                  glm::vec2(64 * 2, 64 * 2), jesus_texture);
 
   while (window.running()) {
     if (vm.get_status() != ScriptVmStatus::Stopped) {
