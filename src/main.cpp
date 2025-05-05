@@ -1,14 +1,121 @@
-#include "include/log.hpp"
-#include "include/quad.hpp"
-#include "include/render.hpp"
-#include "include/window.hpp"
+#include "log.hpp"
+#include "quad.hpp"
+#include "render.hpp"
+#include "util.hpp"
+#include "window.hpp"
+#include "script/cell.hpp"
+#include "script/registry.hpp"
+#include "script/script.hpp"
+#include "script/vm.hpp"
+#include <chrono>
+#include <format>
+#include <span>
+#include <string_view>
 
 const glm::vec4 BACKGROUND_COLOR(153.0f / 250, 59.0f / 250, 80.0f / 250, 1.0f);
 const float QUAD_SPEED = 95;
 
+ScriptCell script_print_string(ScriptVm &vm, std::span<const ScriptCell> params) {
+  trace::debug(vm.get_string(params[0]));
+  return 0.0;
+}
+
+ScriptCell script_print_number(ScriptVm &vm, std::span<const ScriptCell> params) {
+  trace::debug(std::to_string(params[0]));
+  return 0.0;
+}
+
+static std::chrono::high_resolution_clock::time_point script_end_wait_time;
+ScriptCell script_wait(ScriptVm &vm, std::span<const ScriptCell> params) {
+  using namespace std::chrono;
+  script_end_wait_time = high_resolution_clock::now() + duration_cast<seconds>(duration<double>(params[0]));
+  vm.yield();
+  return 0.0;
+}
+
+struct Logger {
+  Logger(uint32_t id): id(id) {}
+
+  void print_string(std::string_view str) {
+    trace::debug(std::format("{}: {} [{}]", prefix, str, stamp));
+  }
+
+  uint32_t id;
+  std::string prefix;
+  double stamp = 0.0;
+};
+
+static std::vector<Logger> loggers;
+static uint32_t next_logger_id = 1;
+
+ScriptCell script_logger_new(ScriptVm &vm, std::span<const ScriptCell> params) {
+  uint32_t id = next_logger_id++;
+  loggers.emplace_back(id);
+  return id;
+}
+
+std::optional<size_t> get_logger(uint32_t id) {
+  return util::index_of(loggers.begin(), loggers.end(), [id](const auto &x) {
+    return x.id == id;
+  });
+}
+
+ScriptCell script_logger_destroy(ScriptVm &vm, std::span<const ScriptCell> params) {
+  if (auto idx = get_logger(params[0])) {
+    loggers.erase(loggers.begin() + *idx);
+  }
+  return 0.0;
+}
+
+ScriptCell script_logger_set_prefix(ScriptVm &vm, std::span<const ScriptCell> params) {
+  if (auto idx = get_logger(params[0])) {
+    loggers[*idx].prefix = vm.get_string(params[1]);
+  }
+  return 0.0;
+}
+
+ScriptCell script_logger_set_stamp(ScriptVm &vm, std::span<const ScriptCell> params) {
+  if (auto idx = get_logger(params[0])) {
+    loggers[*idx].stamp = params[1];
+  }
+  return 0.0;
+}
+
+ScriptCell script_logger_print_string(ScriptVm &vm, std::span<const ScriptCell> params) {
+  if (auto idx = get_logger(params[0])) {
+    loggers[*idx].print_string(vm.get_string(params[1]));
+  }
+  return 0.0;
+}
+
 int main() {
   Window window("V2", 1280, 720);
   Renderer renderer(window);
+
+  ScriptRegistry registry;
+  registry.add_native_fn("print_string", ScriptCellType::Void, {ScriptCellType::String}, script_print_string);
+  registry.add_native_fn("print_number", ScriptCellType::Void, {ScriptCellType::Number}, script_print_number);
+  registry.add_native_fn("wait", ScriptCellType::Void, {ScriptCellType::Number}, script_wait);
+
+  registry.add_native_fn("logger_new", ScriptCellType::Number, {}, script_logger_new);
+  registry.add_native_fn("logger_destroy", ScriptCellType::Void, {ScriptCellType::Number}, script_logger_destroy);
+  registry.add_native_fn("logger_set_prefix", ScriptCellType::Void, {ScriptCellType::Number, ScriptCellType::String}, script_logger_set_prefix);
+  registry.add_native_fn("logger_set_stamp", ScriptCellType::Void, {ScriptCellType::Number, ScriptCellType::Number}, script_logger_set_stamp);
+  registry.add_native_fn("logger_print_string", ScriptCellType::Void, {ScriptCellType::Number, ScriptCellType::String}, script_logger_print_string);
+  
+  registry.add_des_struct("Logger", "logger_new", {
+    {"prefix", "logger_set_prefix"},
+    {"stamp", "logger_set_stamp"},
+  });
+
+  auto script = Script::compile_file("script.v2s", registry);
+  if (!script) {
+    trace::error("go fix up script.v2s");
+    return -1;
+  }
+
+  ScriptVm vm(*script);
+  vm.call(*vm.lookup_fn("main"));
 
   trace::info("Window created, Renderer created.");
 
@@ -26,31 +133,15 @@ int main() {
                   glm::vec2(64 * 2, 64 * 2), jesus_texture);
 
   while (window.running()) {
-    eye_quad.angle += 1;
-
-    glm::vec2 move_dir{};
-
-    if (window.is_key_down(GLFW_KEY_W)) {
-      move_dir.y += -1;
+    if (vm.get_status() != ScriptVmStatus::Stopped) {
+      if (std::chrono::high_resolution_clock::now() >= script_end_wait_time) {
+        vm.resume();
+      }
     }
 
-    if (window.is_key_down(GLFW_KEY_S)) {
-      move_dir.y += 1;
-    }
-
-    if (window.is_key_down(GLFW_KEY_A)) {
-      move_dir.x += -1;
-    }
-
-    if (window.is_key_down(GLFW_KEY_D)) {
-      move_dir.x += 1;
-    }
-
-    if (move_dir != glm::vec2())
-      jesus_quad.pos += glm::normalize(move_dir * QUAD_SPEED);
-
-    window.clear(BACKGROUND_COLOR);
-    renderer.draw_quads({background_quad, eye_quad, jesus_quad});
+    template_quad.angle += 1;
+    window.clear(background_color);
+    renderer.draw_quad(template_quad);
   }
   trace::info("Window closed.");
   return 0;
