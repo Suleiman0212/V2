@@ -45,6 +45,7 @@ std::string_view Token::type_name(TokenType type) {
     case TokenType::NumberLiteral: return "number";
     case TokenType::StringLiteral: return "string";
   }
+  return "<?>";
 }
 
 std::optional<std::vector<Token>> Lexer::tokenize(std::string_view source) {
@@ -87,7 +88,13 @@ again:
       if (match('=')) return emit(TokenType::StarAssign);
       return emit(TokenType::Star);
     case '/':
-      if (match('=')) return emit(TokenType::SlashAssign);
+      if (match('/')) {
+        // comment
+        while (!is_eof() && !match('\n')) next();
+        goto again;
+      } else if (match('=')) {
+        return emit(TokenType::SlashAssign);
+      }
       return emit(TokenType::Slash);
     case '=': 
       if (match('=')) return emit(TokenType::Eq);

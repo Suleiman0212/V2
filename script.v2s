@@ -20,6 +20,21 @@ fn flow() {
     }
 }
 
+fn des_struct() {
+    let log = Logger {
+        prefix: "Script",
+        stamp: 69,
+    };
+    logger_print_string(log, "these things are called designated structs!");
+    logger_print_string(log, "they're an alternative to manually calling the factory function and 'setter' functions");
+
+    logger_set_prefix(log, "NOT Script");
+    logger_set_stamp(log, 70);
+    logger_print_string(log, "hello");
+
+    logger_destroy(log);
+}
+
 fn flowering_night() {
     print_string("Tinged in bloody sin, one yet budding in the deep dim flooding field of ghostly flowers");
     wait(3.5);
@@ -55,8 +70,12 @@ fn flowering_night() {
 }
 
 fn main() {
+    // hello
+    // comment!
     print_string("hello, wonderful world!");
     math();
     flow();
+    des_struct();
     flowering_night();
 }
+// final thing
