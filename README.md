@@ -50,9 +50,11 @@ int main() {
 
 ---
 
-## 🧪 Пример скрипта
+## 🧪 Скриптовый язык
 
-```v2script
+### Синтаксис
+
+```Rust
 // Объявление функции
 fn <name>(<param: type>) {
     // тело функции
@@ -71,6 +73,31 @@ if <condition> {
 // Пауза выполнения
 wait(<time_in_seconds>);
 
+```
+
+### Пример
+
+```Rust
+fn say_number(n: number) {
+  print_string("the number is:");
+  print_number(n);
+}
+
+fn main() {
+  let var = 0;
+  var += 2 + 2 * 2;
+  if var == 6 {
+    print_string("var is indeed equal to 6");
+  }
+
+  say_number(69);
+}
+```
+Вывод
+```Bash
+var is indeed equal to 6
+the number is:
+69.000000
 ```
 
 ## ⚙️ Сборка и запуск
