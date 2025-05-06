@@ -1,9 +1,9 @@
-#include "include/window.hpp"
-#include "include/glad/glad.h"
-#include "log.hpp"
+#include "window.hpp"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glm/fwd.hpp>
-#include <iostream>
+#include <glm/glm.hpp>
+#include "glad/glad.h"
+#include "log.hpp"
 
 void framebuffer_size_callback(GLFWwindow *glfw_handle, int width, int height) {
   Window *window = (Window *)glfwGetWindowUserPointer(glfw_handle);
@@ -12,7 +12,7 @@ void framebuffer_size_callback(GLFWwindow *glfw_handle, int width, int height) {
     window->framebuffer_callback(width, height);
 }
 
-Window::Window(std::string title, uint32_t width, uint32_t height) {
+Window::Window(const std::string &title, glm::uvec2 size) {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -22,7 +22,7 @@ Window::Window(std::string title, uint32_t width, uint32_t height) {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-  window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+  window = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
   if (window == nullptr) {
     trace::error("Failed to create window");
     glfwTerminate();
@@ -32,7 +32,6 @@ Window::Window(std::string title, uint32_t width, uint32_t height) {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
     trace::error("Failed to initialize opengl functions");
   }
 }
