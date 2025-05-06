@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace util {
   template<class InputIt, class Pred>
@@ -11,4 +13,6 @@ namespace util {
     if (it == last) return std::nullopt;
     return std::distance(first, it);
   }
+
+  std::optional<std::vector<char>> read_file(const std::string &filename);
 }

@@ -1,16 +1,15 @@
 #pragma once
+
 #include <functional>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <cstdint>
 #include <glm/glm.hpp>
 #include <string>
 
 using WindowFramebufferCallback = std::function<void(int width, int height)>;
 
+struct GLFWwindow;
 class Window {
 public:
-  Window(std::string title, uint32_t width, uint32_t height);
+  Window(const std::string &title, glm::uvec2 size);
   ~Window();
 
   bool running();
