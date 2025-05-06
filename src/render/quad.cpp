@@ -1,11 +1,12 @@
 #include "render/quad.hpp"
 #include <glm/ext/matrix_transform.hpp>
 
-Quad::Quad(glm::vec2 pos, glm::vec2 size, Texture &texture): 
-  pos(pos), size(size), origin(size / 2.0f), texture(texture) {}
+Quad::Quad(glm::vec2 pos, glm::vec2 size, Texture &texture)
+    : pos(pos), size(size), origin(size / 2.0f), texture(texture) {}
 
-Quad::Quad(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin, Texture &texture): 
-  pos(pos), size(size), angle(angle), origin(origin), texture(texture) {}
+Quad::Quad(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin,
+           Texture &texture)
+    : pos(pos), size(size), angle(angle), origin(origin), texture(texture) {}
 
 glm::mat4 Quad::model() const {
   glm::mat4 model(1.0f);

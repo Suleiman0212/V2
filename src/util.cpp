@@ -1,10 +1,10 @@
 #include "util.hpp"
+#include "log.hpp"
 #include <format>
 #include <fstream>
 #include <optional>
 #include <string>
 #include <vector>
-#include "log.hpp"
 
 std::optional<std::vector<char>> util::read_file(const std::string &filename) {
   std::ifstream stream(filename, std::ios_base::ate);
