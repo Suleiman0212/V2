@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 #include <glm/ext/matrix_clip_space.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
 struct Vertex {
@@ -14,6 +13,7 @@ struct Vertex {
 
 struct InstanceData {
   glm::mat4 model;
+  glm::ivec4 texture_rect;
 };
 
 namespace {
@@ -45,7 +45,6 @@ Renderer::Renderer(glm::uvec2 canvas_size) {
                         (void *)offsetof(Vertex, tex_coords));
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -80,6 +79,13 @@ Renderer::Renderer(glm::uvec2 canvas_size) {
       (void *)(offsetof(InstanceData, model) + sizeof(glm::vec4) * 3));
   glVertexAttribDivisor(5, 1);
 
+  glEnableVertexAttribArray(6);
+  glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData),
+                        (void *)(offsetof(InstanceData, texture_rect)));
+  glVertexAttribDivisor(6, 1);
+
+  glBindVertexArray(0);
+
   shader_instanced = Shader::from_file("shaders/vertex_instanced.glsl",
                                        "shaders/fragment_instanced.glsl");
   set_canvas_size(canvas_size);
@@ -105,20 +111,30 @@ void Renderer::draw_quads(std::span<const Quad> quads) {
 
 void Renderer::draw_quad_instanced(std::span<const QuadInstance> quads,
                                    Texture &texture) {
+  Shader::bind(&*shader_instanced);
   Texture::bind(&texture);
+
+  glm::uvec2 texture_size = texture.get_size();
+
   std::vector<InstanceData> instances;
   for (auto &quad : quads) {
-    instances.emplace_back(InstanceData{quad.model()});
+    auto texture_rect = glm::vec4(quad.texture_rect) /
+                        glm::vec4(texture_size.x, texture_size.y,
+                                  texture_size.x, texture_size.y);
+
+    instances.emplace_back(quad.model(), texture_rect);
   }
 
   glBindVertexArray(vao_id);
   glBindBuffer(GL_ARRAY_BUFFER, instanced_vbo_id);
   glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(InstanceData),
                instances.data(), GL_STATIC_DRAW);
+
   glDrawArraysInstanced(GL_TRIANGLES, 0, QUAD_VERTICES.size(), quads.size());
 }
 
 void Renderer::set_canvas_size(glm::uvec2 size) {
-  shader->set_mat4("projection",
-                   glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f));
+  glm::mat4 projection = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f);
+  shader->set_mat4("projection", projection);
+  shader_instanced->set_mat4("projection", projection);
 }

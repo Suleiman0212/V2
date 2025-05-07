@@ -1,7 +1,7 @@
 #pragma once
 
-#include "render/quad.hpp"
-#include "render/shader.hpp"
+#include "quad.hpp"
+#include "shader.hpp"
 #include <cstdint>
 #include <optional>
 #include <span>

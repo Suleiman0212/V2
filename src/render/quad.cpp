@@ -19,12 +19,13 @@ glm::mat4 Quad::model() const {
   return model;
 }
 
-QuadInstance::QuadInstance(glm::vec2 pos, glm::vec2 size)
-    : pos(pos), size(size), origin(size / 2.0f) {}
+QuadInstance::QuadInstance(glm::vec2 pos, glm::vec2 size,
+                           glm::ivec4 texture_rect)
+    : pos(pos), size(size), origin(size / 2.0f), texture_rect(texture_rect) {}
 
 QuadInstance::QuadInstance(glm::vec2 pos, glm::vec2 size, float angle,
-                           glm::vec2 origin)
-    : pos(pos), size(size), origin(size / 2.0f) {}
+                           glm::vec2 origin, glm::ivec4 texture_rect)
+    : pos(pos), size(size), origin(size / 2.0f), texture_rect(texture_rect) {}
 
 glm::mat4 QuadInstance::model() const {
   glm::mat4 model(1.0f);

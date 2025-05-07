@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/texture.hpp"
+#include "texture.hpp"
 #include <glm/glm.hpp>
 
 struct Quad {
@@ -18,8 +18,9 @@ struct Quad {
 };
 
 struct QuadInstance {
-  QuadInstance(glm::vec2 pos, glm::vec2 size);
-  QuadInstance(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin);
+  QuadInstance(glm::vec2 pos, glm::vec2 size, glm::ivec4 texture_rect);
+  QuadInstance(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin,
+               glm::ivec4 texture_rect);
 
   glm::mat4 model() const;
 
@@ -27,4 +28,5 @@ struct QuadInstance {
   glm::vec2 size{1.0f};
   float angle = 0.0f;
   glm::vec2 origin;
+  glm::ivec4 texture_rect;
 };
