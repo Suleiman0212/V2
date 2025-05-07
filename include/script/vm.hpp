@@ -4,9 +4,9 @@
 #include <span>
 #include <string_view>
 #include <vector>
-#include "script/ast.hpp"
-#include "script/cell.hpp"
-#include "script/script.hpp"
+#include "ast.hpp"
+#include "cell.hpp"
+#include "script.hpp"
 
 enum class ScriptVmStatus {
   Stopped,
@@ -37,14 +37,14 @@ private:
     size_t start_idx;
   };
 
-  ScriptCell eval(const AstNodePtr &node, size_t block_start_idx = 0);
   void call_inner(size_t idx, std::span<const ScriptCell> params);
-  void call_epilogue();
+  void exec();
+
+  ScriptCell eval(const AstNodePtr &node);
 
   const Script &script;
 
   ScriptVmStatus status = ScriptVmStatus::Stopped;
   std::vector<CallFrame> frames;
-  size_t frame_depth = 0;
-  std::vector<std::vector<YieldBlockState>> frames_yield_blocks;
+  std::vector<const AstNodePtr *> exec_stack;
 };

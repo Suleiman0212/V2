@@ -7,11 +7,11 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "script/ast.hpp"
-#include "script/cell.hpp"
-#include "script/lexer.hpp"
-#include "script/registry.hpp"
-#include "script/script.hpp"
+#include "ast.hpp"
+#include "cell.hpp"
+#include "lexer.hpp"
+#include "registry.hpp"
+#include "script.hpp"
 
 class Parser {
 public:
@@ -26,6 +26,7 @@ private:
 
   enum class Symbol {
     None,
+    Const,
     Var,
     Fn,
     NativeFn,
@@ -67,6 +68,7 @@ private:
   AstNodePtr test();
   AstNodePtr expr();
 
+  AstNodePtr while_statement();
   AstNodePtr if_statement();
   AstNodePtr var_decl();
   AstNodePtr block();

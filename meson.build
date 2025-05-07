@@ -13,6 +13,7 @@ sources = [
   'src/script/lexer.cpp',
   'src/script/script.cpp',
   'src/script/registry.cpp',
+  'src/script/std_library.cpp',
   'src/script/parser.cpp',
   'src/script/vm.cpp',
 
@@ -21,27 +22,7 @@ sources = [
 include_dirs = ['include/']
 depends = [dependency('glfw3')]
 
-headers = [
-  'include/util.hpp',
-  'include/log.hpp',
-  'include/window.hpp',
-
-  'include/render/shader.hpp',
-  'include/render/quad.hpp',
-  'include/render/render.hpp',
-  'include/render/texture.hpp',
-
-  'include/script/ast.hpp',
-  'include/script/cell.hpp',
-  'include/script/lexer.hpp',
-  'include/script/parser.hpp',
-  'include/script/registry.hpp',
-  'include/script/script.hpp',
-  'include/script/vm.hpp',
-]
-install_headers(headers,
-  subdir: 'v2',
-)
+subdir('include/')
 
 shared_library('v2', sources,
   cpp_args: '-std=c++20',

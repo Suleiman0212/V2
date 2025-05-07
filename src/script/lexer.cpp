@@ -41,6 +41,7 @@ std::string_view Token::type_name(TokenType type) {
     case TokenType::Fn: return "'fn'";
     case TokenType::Let: return "'let'";
     case TokenType::If: return "'if'";
+    case TokenType::While: return "'while'";
     
     case TokenType::NumberLiteral: return "number";
     case TokenType::StringLiteral: return "string";
@@ -169,6 +170,8 @@ Token Lexer::read_identifier() {
     return emit(TokenType::Let);
   } else if (identifier == "if") {
     return emit(TokenType::If);
+  } else if (identifier == "while") {
+    return emit(TokenType::While);
   }
   return emit(TokenType::Identifier, identifier);
 }

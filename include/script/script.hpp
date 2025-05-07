@@ -4,9 +4,9 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "script/ast.hpp"
-#include "script/cell.hpp"
-#include "script/registry.hpp"
+#include "ast.hpp"
+#include "cell.hpp"
+#include "registry.hpp"
 
 struct ScriptFn {
   std::string name;

@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "script/cell.hpp"
+#include "cell.hpp"
 
 enum class AstNodeType {
   Block,
@@ -16,8 +16,10 @@ enum class AstNodeType {
   Binary,
 
   If,
+  While,
 
   Call,
+  CallEpilogue, // vm internal use
   NativeCall,
 };
 
@@ -131,6 +133,15 @@ struct AstNodeIf: AstNode {
   AstNodePtr true_body, false_body;
 };
 
+struct AstNodeWhile: AstNode {
+  AstNodeWhile(AstNodePtr &&cond, AstNodePtr &&body): cond(std::move(cond)), body(std::move(body)) {}
+
+  AstNodeType get_type() const override { return AstNodeType::While; }
+
+  AstNodePtr cond;
+  AstNodePtr body;
+};
+
 struct AstNodeCall: AstNode {
   AstNodeCall(size_t idx, std::vector<AstNodePtr> &&params): idx(idx), params(std::move(params)) {}
 
@@ -138,6 +149,10 @@ struct AstNodeCall: AstNode {
 
   size_t idx;
   std::vector<AstNodePtr> params;
+};
+
+struct AstNodeCallEpilogue: AstNode {
+  AstNodeType get_type() const override { return AstNodeType::CallEpilogue; }
 };
 
 struct AstNodeNativeCall: AstNode {

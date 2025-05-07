@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "script/cell.hpp"
+#include "cell.hpp"
 
 class ScriptVm;
 using ScriptNativeFnPtr = std::function<ScriptCell(ScriptVm &, std::span<const ScriptCell> params)>;
@@ -37,15 +37,27 @@ struct ScriptDesField {
   std::string_view setter_name;
 };
 
+struct ScriptConst {
+  std::string name;
+  ScriptCell value;
+};
+
 class ScriptRegistry {
 public:
+  void add_const(std::string_view name, double value);
   void add_native_fn(std::string_view name, ScriptCellType return_type, std::initializer_list<ScriptCellType> param_types, ScriptNativeFnPtr fn);
   void add_des_struct(std::string_view name, std::string_view factory_name, std::initializer_list<ScriptDesField> fields);
 
+  void load_std_library();
+
 private:
+  bool is_symbol_defined(std::string_view name) const;
+
+  std::optional<size_t> lookup_const(std::string_view name) const;
   std::optional<size_t> lookup_native_fn(std::string_view name) const;
   std::optional<size_t> lookup_des_struct(std::string_view name) const;
 
+  std::vector<ScriptConst> consts;
   std::vector<ScriptNativeFn> native_fns;
   std::vector<ScriptDesStruct> des_structs;
 
