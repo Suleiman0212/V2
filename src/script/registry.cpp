@@ -13,17 +13,18 @@ std::optional<size_t> ScriptDesStruct::lookup_field(std::string_view name) const
   });
 }
 
+void ScriptRegistry::add_const(std::string_view name, double value) {
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
+  consts.emplace_back(std::string(name), value);
+}
+
 void ScriptRegistry::add_native_fn(std::string_view name, ScriptCellType return_type, std::initializer_list<ScriptCellType> param_types, ScriptNativeFnPtr fn) {
-  if (lookup_native_fn(name) || lookup_des_struct(name)) {
-    throw std::runtime_error("symbol redefinition");
-  }
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
   native_fns.emplace_back(std::string(name), return_type, param_types, fn);
 }
 
 void ScriptRegistry::add_des_struct(std::string_view name, std::string_view factory_name, std::initializer_list<ScriptDesField> fields) {
-  if (lookup_native_fn(name) || lookup_des_struct(name)) {
-    throw std::runtime_error("symbol redefinition");
-  }
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
 
   ScriptDesStruct des_struct;
   des_struct.name = std::string(name);
@@ -57,6 +58,16 @@ void ScriptRegistry::add_des_struct(std::string_view name, std::string_view fact
   }
 
   des_structs.emplace_back(std::move(des_struct));
+}
+
+bool ScriptRegistry::is_symbol_defined(std::string_view name) const {
+  return lookup_const(name) || lookup_native_fn(name) || lookup_des_struct(name);
+}
+
+std::optional<size_t> ScriptRegistry::lookup_const(std::string_view name) const {
+  return util::index_of(consts.begin(), consts.end(), [name](const auto &x) {
+    return x.name == name;
+  });
 }
 
 std::optional<size_t> ScriptRegistry::lookup_native_fn(std::string_view name) const {

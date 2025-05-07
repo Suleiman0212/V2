@@ -42,6 +42,7 @@ enum class TokenType {
   Fn,
   Let,
   If,
+  While,
 
   NumberLiteral, // double value
   StringLiteral, // string value

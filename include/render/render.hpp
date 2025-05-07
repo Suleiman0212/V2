@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <optional>
 #include <span>
-#include "render/shader.hpp"
-#include "render/quad.hpp"
+#include "shader.hpp"
+#include "quad.hpp"
 
 class Renderer {
 public:

@@ -79,6 +79,9 @@ Parser::Symbol Parser::lookup_symbol(std::string_view name, size_t &idx) {
   } else if (auto fn_idx = script.lookup_fn(name)) {
     idx = *fn_idx;
     return Symbol::Fn;
+  } else if (auto const_idx = script.registry.lookup_const(name)) {
+    idx = *const_idx;
+    return Symbol::Const;
   } else if (auto des_struct_idx = script.registry.lookup_des_struct(name)) {
     idx = *des_struct_idx;
     return Symbol::DesStruct;
@@ -99,6 +102,7 @@ Parser::Symbol Parser::lookup_symbol(std::string_view name, size_t &idx) {
 std::string_view Parser::symbol_name(Symbol sym) {
   switch (sym) {
     case Symbol::None: return "none";
+    case Symbol::Const: return "constant";
     case Symbol::Var: return "variable";
     case Symbol::Fn: return "function";
     case Symbol::NativeFn: return "native function";
@@ -184,7 +188,7 @@ AstNodePtr Parser::des_struct(size_t idx) {
     const auto &value_token = peek();
     AstNodePtr value = expr();
     if (value->value_type != field_type) {
-      throw_error(std::format("can't init field \"{}\" (a {}) with a {}", field_name, cell_type_name(field_type), cell_type_name(value->value_type)),
+      throw_error(std::format("can't initialize field \"{}\" (a {}) with a {}", field_name, cell_type_name(field_type), cell_type_name(value->value_type)),
         value_token.line, value_token.col);
     }
 
@@ -278,12 +282,13 @@ AstNodePtr Parser::primary() {
           while (!is_eof() && !check(TokenType::RightParen)) {
             if (!first) expect(TokenType::Comma);
 
-            next();
+            expr();
             first = false;
           }
           expect(TokenType::RightParen);
         }
         break;
+      case Symbol::Const: return new_node<AstNodeLiteral>(ScriptCellType::Number, script.registry.consts[sym_idx].value);
       case Symbol::Var: return new_node<AstNodeGetVar>(sym_idx, vars[sym_idx].type);
       case Symbol::Fn: return fn_ref(false, sym_idx);
       case Symbol::NativeFn: return fn_ref(true, sym_idx);
@@ -428,6 +433,18 @@ AstNodePtr Parser::expr() {
   return lhs;
 }
 
+AstNodePtr Parser::while_statement() {
+  const auto &cond_token = peek();
+  AstNodePtr cond = expr();
+  if (cond->value_type != ScriptCellType::Number) {
+    throw_error(std::format("can't use {} expression in while condition", cell_type_name(cond->value_type)), 
+      cond_token.line, cond_token.col);
+  }
+
+  expect(TokenType::LeftBrace);
+  return new_node<AstNodeWhile>(std::move(cond), block());
+}
+
 AstNodePtr Parser::if_statement() {
   const auto &cond_token = peek();
   AstNodePtr cond = expr();
@@ -505,6 +522,8 @@ AstNodePtr Parser::statement() {
     return var_decl();
   } else if (match(TokenType::If)) {
     return if_statement();
+  } else if (match(TokenType::While)) {
+    return while_statement();
   } else {
     // expression
     AstNodePtr node = expr();
