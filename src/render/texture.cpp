@@ -40,7 +40,7 @@ Texture::~Texture() {
 }
 
 bool Texture::load(const std::string &filename) {
-  stbi_set_flip_vertically_on_load(true);
+  stbi_set_flip_vertically_on_load(false);
 
   int width, height;
   stbi_uc *pixels = stbi_load(filename.c_str(), &width, &height, nullptr, 4);

@@ -13,17 +13,17 @@ struct Vertex {
 
 struct InstanceData {
   glm::mat4 model;
-  glm::ivec4 texture_rect;
+  glm::vec4 texture_rect;
 };
 
 namespace {
 const std::array QUAD_VERTICES{
-    Vertex(glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f)), // top right
-    Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 0.0f)), // bottom right
-    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f)), // top left
-    Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 0.0f)), // bottom right
-    Vertex(glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f)), // bottom left
-    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 1.0f))  // top left
+    Vertex(glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f)), // top right
+    Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f)), // bottom right
+    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f)), // top left
+    Vertex(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f)), // bottom right
+    Vertex(glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f)), // bottom left
+    Vertex(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f))  // top left
 };
 }
 

@@ -7,19 +7,19 @@ layout (location = 6) in vec4 textureRect;
 
 uniform mat4 projection;
 
-out vec2 TexCoord;
+out vec2 texCoord;
 
 void main() {
-    gl_Position = projection * model * vec4(vertex_pos, 0.0f, 1.0f);
+    gl_Position = projection * model * vec4(aPos, 0.0f, 1.0f);
 
     vec2 corners[] = vec2[](
+        textureRect.zy,
         textureRect.zw,
-        textureRect.zy,
-        textureRect.xw,
-        textureRect.zy,
         textureRect.xy,
-        textureRect.xw
+        textureRect.zw,
+        textureRect.xw,
+        textureRect.xy
     );
 
-    frag_tex_coords = corners[gl_VertexID];
+    texCoord = corners[gl_VertexID];
 }
