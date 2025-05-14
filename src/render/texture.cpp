@@ -1,5 +1,6 @@
 #include "render/texture.hpp"
 #include <format>
+#include <utility>
 #define STB_IMAGE_IMPLEMENTATION
 #include "glad/glad.h"
 #include "log.hpp"
@@ -33,10 +34,23 @@ Texture::Texture(const std::string &filename) {
   load(filename);
 }
 
+Texture::Texture(Texture &&rhs) { *this = std::move(rhs); }
+
 Texture::~Texture() {
   if (this == binding)
     bind(nullptr);
-  glDeleteTextures(1, &id);
+  if (id != 0)
+    glDeleteTextures(1, &id);
+}
+
+Texture &Texture::operator=(Texture &&rhs) {
+  if (&rhs != this) {
+    std::swap(rhs.id, id);
+    std::swap(rhs.size, size);
+    if (&rhs == binding)
+      binding = this;
+  }
+  return *this;
 }
 
 bool Texture::load(const std::string &filename) {

@@ -8,8 +8,10 @@
 
 class Shader {
 public:
-  static std::optional<Shader> from_string(std::string_view vertex_source, std::string_view frag_source);
-  static std::optional<Shader> from_file(const std::string &vertex_filename, const std::string &frag_filename);
+  static std::optional<Shader> from_string(std::string_view vertex_source,
+                                           std::string_view frag_source);
+  static std::optional<Shader> from_file(const std::string &vertex_filename,
+                                         const std::string &frag_filename);
 
   static void bind(Shader *shader);
 
@@ -17,6 +19,7 @@ public:
   Shader(Shader &&rhs);
   ~Shader();
 
+  Shader &operator=(const Shader &rhs) = delete;
   Shader &operator=(Shader &&rhs);
 
   void set_bool(const std::string &name, bool value);
