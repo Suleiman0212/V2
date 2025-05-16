@@ -1,6 +1,7 @@
 headers = [
   'util.hpp',
   'log.hpp',
+  'random.hpp',
   'window.hpp',
 
   'render/quad.hpp',

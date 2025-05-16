@@ -3,6 +3,7 @@ project('v2', ['c', 'cpp'])
 sources = [
   'src/util.cpp',
   'src/log.cpp',
+  'src/random.cpp',
   'src/window.cpp',
 
   'src/render/shader.cpp',
