@@ -51,8 +51,8 @@ uint64_t rand_uint() {
 
 float rand_float() { return rand_uint() / (float)UINT64_MAX; }
 
-int rand_range(int min, int max) { return rand_range((float)min, (float)max); }
+int rand_int_range(int min, int max) { return rand_float_range(min, max); }
 
-float rand_range(float min, float max) {
+float rand_float_range(float min, float max) {
   return (max + std::abs(min)) * rand_float() + min;
 }
