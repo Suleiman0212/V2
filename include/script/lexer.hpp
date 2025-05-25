@@ -13,12 +13,13 @@ enum class TokenType {
   RightParen,
   LeftBrace,
   RightBrace,
-  
+
   Not,
   Plus,
   Minus,
   Star,
   Slash,
+  Percent,
 
   Eq,
   NotEq,
@@ -26,22 +27,29 @@ enum class TokenType {
   LessEq,
   Greater,
   GreaterEq,
-  
+
+  AndAnd,
+  PipePipe,
+
   Assign,
   PlusAssign,
   MinusAssign,
   StarAssign,
   SlashAssign,
+  PercentAssign,
 
   Comma,
   Colon,
   Semicolon,
 
   Identifier, // string value
+  Const,
   Else,
+  False,
   Fn,
   Let,
   If,
+  True,
   While,
 
   NumberLiteral, // double value
@@ -75,18 +83,18 @@ private:
   Token emit(TokenType type);
   Token emit(TokenType type, double value);
   Token emit(TokenType type, std::string_view value);
-  
+
   bool is_eof();
   char peek();
   char peek_prev();
   char peek_next();
-  
+
   char next();
   bool match(char ch);
-  
+
   bool has_error();
   void throw_error(std::string_view msg);
-  
+
   std::string_view source;
   size_t pos = 0;
   int line = 1, col = 1;

@@ -13,18 +13,18 @@ std::optional<size_t> ScriptDesStruct::lookup_field(std::string_view name) const
   });
 }
 
-void ScriptRegistry::add_const(std::string_view name, double value) {
-  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
+void ScriptRegistry::add_const(std::string_view name, ScriptCell value) {
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol is already defined");
   consts.emplace_back(std::string(name), value);
 }
 
 void ScriptRegistry::add_native_fn(std::string_view name, ScriptCellType return_type, std::initializer_list<ScriptCellType> param_types, ScriptNativeFnPtr fn) {
-  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol is already defined");
   native_fns.emplace_back(std::string(name), return_type, param_types, fn);
 }
 
 void ScriptRegistry::add_des_struct(std::string_view name, std::string_view factory_name, std::initializer_list<ScriptDesField> fields) {
-  if (is_symbol_defined(name)) throw std::runtime_error("symbol redefinition");
+  if (is_symbol_defined(name)) throw std::runtime_error("symbol is already defined");
 
   ScriptDesStruct des_struct;
   des_struct.name = std::string(name);
