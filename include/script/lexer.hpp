@@ -1,6 +1,6 @@
 #pragma once
 
-#include "script/cell.hpp"
+#include "cell.hpp"
 #include <optional>
 #include <string>
 #include <string_view>
