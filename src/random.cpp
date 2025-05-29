@@ -16,7 +16,7 @@ uint64_t splitmix64(uint64_t &state) {
 static uint64_t rotl(uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
 } // namespace
 
-void rand_seed(uint64_t seed) {
+void rng::seed(uint64_t seed) {
   uint64_t state = seed;
   xoshiro_state[0] = splitmix64(state);
   xoshiro_state[1] = splitmix64(state);
@@ -24,7 +24,7 @@ void rand_seed(uint64_t seed) {
   xoshiro_state[3] = splitmix64(state);
 }
 
-uint64_t rand_uint() {
+uint64_t rng::next_uint() {
   using namespace std::chrono;
 
   if (xoshiro_state[0] == 0 && xoshiro_state[1] == 0 && xoshiro_state[2] == 0 &&
@@ -32,7 +32,7 @@ uint64_t rand_uint() {
     uint64_t time_ms = duration_cast<milliseconds>(
                            high_resolution_clock::now().time_since_epoch())
                            .count();
-    rand_seed(time_ms);
+    seed(time_ms);
   }
 
   uint64_t result =
@@ -49,10 +49,10 @@ uint64_t rand_uint() {
   return result;
 }
 
-float rand_float() { return rand_uint() / (float)UINT64_MAX; }
+float rng::next_float() { return next_uint() / (float)UINT64_MAX; }
 
-int rand_int_range(int min, int max) { return rand_float_range(min, max); }
+int rng::next_int_range(int min, int max) { return next_float_range(min, max); }
 
-float rand_float_range(float min, float max) {
-  return (max + std::abs(min)) * rand_float() + min;
+float rng::next_float_range(float min, float max) {
+  return (max + std::abs(min)) * next_float() + min;
 }

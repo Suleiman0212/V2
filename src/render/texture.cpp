@@ -1,4 +1,5 @@
 #include "render/texture.hpp"
+#include "math/vec2.hpp"
 #include <format>
 #include <utility>
 #define STB_IMAGE_IMPLEMENTATION
@@ -59,21 +60,21 @@ bool Texture::load(const std::string &filename) {
   int width, height;
   stbi_uc *pixels = stbi_load(filename.c_str(), &width, &height, nullptr, 4);
   if (pixels != nullptr) {
-    update(glm::uvec2(width, height), pixels);
+    update(Vec2u(width, height), pixels);
     stbi_image_free(pixels);
     return true;
   } else {
     trace::error(std::format("Failed to load texture: {}", filename));
-    update(glm::uvec2(2, 2), MISSING_TEXTURE_PIXELS);
+    update(Vec2u(2, 2), MISSING_TEXTURE_PIXELS);
     return false;
   }
 }
 
-void Texture::update(glm::uvec2 size, const uint8_t *pixels) {
+void Texture::update(Vec2u size, const uint8_t *pixels) {
   bind(this);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, pixels);
   this->size = size;
 }
 
-glm::uvec2 Texture::get_size() const { return size; }
+Vec2u Texture::get_size() const { return size; }

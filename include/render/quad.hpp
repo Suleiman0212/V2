@@ -1,32 +1,33 @@
 #pragma once
 
+#include "../math/mat4.hpp"
+#include "../math/vec2.hpp"
+#include "../math/vec4.hpp"
 #include "texture.hpp"
-#include <glm/glm.hpp>
 
 struct Quad {
-  Quad(glm::vec2 pos, glm::vec2 size, Texture &texture);
-  Quad(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin,
-       Texture &texture);
+  Quad(Vec2f pos, Vec2f size, Texture &texture);
+  Quad(Vec2f pos, Vec2f size, float angle, Vec2f origin, Texture &texture);
 
-  glm::mat4 model() const;
+  Mat4f model() const;
 
-  glm::vec2 pos;
-  glm::vec2 size{1.0f};
+  Vec2f pos;
+  Vec2f size{1.0f};
   float angle = 0.0f;
-  glm::vec2 origin;
+  Vec2f origin;
   Texture &texture;
 };
 
 struct QuadInstance {
-  QuadInstance(glm::vec2 pos, glm::vec2 size, glm::ivec4 texture_rect);
-  QuadInstance(glm::vec2 pos, glm::vec2 size, float angle, glm::vec2 origin,
-               glm::ivec4 texture_rect);
+  QuadInstance(Vec2f pos, Vec2f size, Vec4i texture_rect);
+  QuadInstance(Vec2f pos, Vec2f size, float angle, Vec2f origin,
+               Vec4i texture_rect);
 
-  glm::mat4 model() const;
+  Mat4f model() const;
 
-  glm::vec2 pos;
-  glm::vec2 size{1.0f};
+  Vec2f pos;
+  Vec2f size{1.0f};
   float angle = 0.0f;
-  glm::vec2 origin;
-  glm::ivec4 texture_rect;
+  Vec2f origin;
+  Vec4i texture_rect;
 };

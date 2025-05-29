@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../math/vec2.hpp"
 #include "quad.hpp"
 #include "shader.hpp"
 #include <cstdint>
@@ -8,16 +9,16 @@
 
 class Renderer {
 public:
-  Renderer(glm::uvec2 canvas_size);
+  Renderer(Vec2u canvas_size);
   ~Renderer();
 
   void draw_quad(const Quad &quad);
   void draw_quads(std::span<const Quad> quads);
 
-  void draw_quad_instanced(std::span<const QuadInstance> quads,
-                           Texture &texture);
+  void draw_quads_instanced(std::span<const QuadInstance> quads,
+                            Texture &texture);
 
-  void set_canvas_size(glm::uvec2 size);
+  void set_canvas_size(Vec2u size);
 
 private:
   std::optional<Shader> shader;
