@@ -1,7 +1,14 @@
 headers = [
   'util.hpp',
   'log.hpp',
+  'random.hpp',
   'window.hpp',
+
+  'math/misc.hpp',
+  'math/vec2.hpp',
+  'math/vec3.hpp',
+  'math/vec4.hpp',
+  'math/mat4.hpp',
 
   'render/quad.hpp',
   'render/shader.hpp',
@@ -16,7 +23,8 @@ headers = [
   'script/vm.hpp',
   'script/script.hpp',
 ]
-install_headers(headers,
+install_headers(
+  headers,
   preserve_path: true,
   subdir: 'v2',
 )

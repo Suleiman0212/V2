@@ -1,9 +1,10 @@
 #include "window.hpp"
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 #include "glad/glad.h"
 #include "log.hpp"
+#include "math/vec2.hpp"
+#include "math/vec4.hpp"
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 void framebuffer_size_callback(GLFWwindow *glfw_handle, int width, int height) {
   Window *window = (Window *)glfwGetWindowUserPointer(glfw_handle);
@@ -12,7 +13,7 @@ void framebuffer_size_callback(GLFWwindow *glfw_handle, int width, int height) {
     window->framebuffer_callback(width, height);
 }
 
-Window::Window(const std::string &title, glm::uvec2 size) {
+Window::Window(const std::string &title, Vec2u size) {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -27,8 +28,8 @@ Window::Window(const std::string &title, glm::uvec2 size) {
     trace::error("Failed to create window");
     glfwTerminate();
   }
-  glfwSetWindowUserPointer(window, this);
   glfwMakeContextCurrent(window);
+  glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -38,16 +39,18 @@ Window::Window(const std::string &title, glm::uvec2 size) {
 
 Window::~Window() { glfwTerminate(); }
 
-bool Window::running() {
-  events();
+bool Window::is_running() const {
+  glfwPollEvents();
   return !glfwWindowShouldClose(window);
 }
 
-void Window::clear(glm::vec4 color) const {
-  glClearColor(color.r, color.g, color.b, 1.0f);
-  glfwSetWindowOpacity(window, color.a);
+void Window::clear(Vec4f color) const {
+  glClearColor(color.x, color.y, color.z, 1.0f);
+  glfwSetWindowOpacity(window, color.w);
   glClear(GL_COLOR_BUFFER_BIT);
 }
+
+void Window::present() const { glfwSwapBuffers(window); }
 
 bool Window::is_key_down(int key) {
   return glfwGetKey(window, key) == GLFW_PRESS;
@@ -55,9 +58,4 @@ bool Window::is_key_down(int key) {
 
 void Window::get_framebuffer_size(int &width, int &height) const {
   glfwGetFramebufferSize(window, &width, &height);
-}
-
-void Window::events() {
-  glfwSwapBuffers(window);
-  glfwPollEvents();
 }
