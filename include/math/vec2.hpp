@@ -1,5 +1,6 @@
 #pragma once
 
+#include "misc.hpp"
 #include <cmath>
 
 #define VEC_BASE_IMPL(name, T)                                                 \
@@ -25,7 +26,7 @@
   constexpr name operator*(T s) const { return *this * name(s); }              \
   constexpr name operator/(T s) const { return *this / name(s); }              \
                                                                                \
-  constexpr auto operator<=>(const name &rhs) const = default;                 \
+  constexpr bool operator==(const name &rhs) const = default;                  \
                                                                                \
   constexpr name &operator+=(name rhs) { return *this = *this + rhs; }         \
   constexpr name &operator-=(name rhs) { return *this = *this - rhs; }         \
@@ -53,22 +54,33 @@ struct Vec2f {
   constexpr Vec2f(Vec2u rhs) : x(rhs.x), y(rhs.y) {}
   constexpr Vec2f(Vec2i rhs) : x(rhs.x), y(rhs.y) {}
 
-  constexpr float dot(Vec2f rhs) const { return x * rhs.x + y * rhs.y; }
-  constexpr float perp_dot(Vec2f rhs) const { return x * rhs.y - y * rhs.x; }
-
-  constexpr float len() const { return std::sqrt(dot(*this)); }
-  constexpr Vec2f normalize() const { return *this / len(); }
-
-  constexpr Vec2f lerp(Vec2f rhs, float t) const {
-    return Vec2f(std::lerp(x, rhs.x, t), std::lerp(y, rhs.y, t));
-  }
-
-  constexpr float angle_to(Vec2f rhs) const {
-    return std::atan2(rhs.y - y, rhs.x - x);
-  }
-
   VEC_FIELDS(float)
 };
 
 #undef VEC_FIELDS
 #undef VEC_BASE_IMPL
+
+#define VEC_CLAMP_FN(T)                                                        \
+  template <> constexpr T clamp(T x, T min, T max) {                           \
+    return T(clamp(x.x, min.x, max.x), clamp(x.y, min.y, max.y));              \
+  }
+
+namespace math {
+VEC_CLAMP_FN(Vec2u)
+VEC_CLAMP_FN(Vec2i)
+VEC_CLAMP_FN(Vec2f)
+
+inline constexpr float dot(Vec2f a, Vec2f b) { return a.x * b.x + a.y * b.y; }
+inline constexpr float perp_dot(Vec2f a, Vec2f b) {
+  return a.x * b.y - a.y * b.x;
+}
+
+inline constexpr float length(Vec2f x) { return std::sqrt(dot(x, x)); }
+inline constexpr Vec2f normalize(Vec2f x) { return x / length(x); }
+
+inline constexpr float angle_to(Vec2f from, Vec2f to) {
+  return std::atan2(to.y - from.y, to.x - from.x);
+}
+} // namespace math
+
+#undef VEC_CLAMP_FN

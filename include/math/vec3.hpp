@@ -1,5 +1,6 @@
 #pragma once
 
+#include "misc.hpp"
 #include <cmath>
 
 #define VEC_BASE_IMPL(name, T)                                                 \
@@ -25,7 +26,7 @@
   constexpr name operator*(T s) const { return *this * name(s); }              \
   constexpr name operator/(T s) const { return *this / name(s); }              \
                                                                                \
-  constexpr auto operator<=>(const name &rhs) const = default;                 \
+  constexpr bool operator==(const name &rhs) const = default;                  \
                                                                                \
   constexpr name &operator+=(name rhs) { return *this = *this + rhs; }         \
   constexpr name &operator-=(name rhs) { return *this = *this - rhs; }         \
@@ -53,24 +54,34 @@ struct Vec3f {
   constexpr Vec3f(Vec3u rhs) : x(rhs.x), y(rhs.y), z(rhs.z) {}
   constexpr Vec3f(Vec3i rhs) : x(rhs.x), y(rhs.y), z(rhs.z) {}
 
-  constexpr float dot(Vec3f rhs) const {
-    return x * rhs.x + y * rhs.y + z * rhs.z;
-  }
-  constexpr Vec3f cross(Vec3f rhs) const {
-    return Vec3f(y * rhs.z - z * rhs.y, -(x * rhs.z - z * rhs.x),
-                 x * rhs.y - y * rhs.x);
-  }
-
-  constexpr float len() const { return std::sqrt(dot(*this)); }
-  constexpr Vec3f normalize() const { return *this / len(); }
-
-  constexpr Vec3f lerp(Vec3f rhs, float t) const {
-    return Vec3f(std::lerp(x, rhs.x, t), std::lerp(y, rhs.y, t),
-                 std::lerp(z, rhs.z, t));
-  }
-
   VEC_FIELDS(float)
 };
 
 #undef VEC_FIELDS
 #undef VEC_BASE_IMPL
+
+#define VEC_CLAMP_FN(T)                                                        \
+  template <> constexpr T clamp(T x, T min, T max) {                           \
+    return T(clamp(x.x, min.x, max.x), clamp(x.y, min.y, max.y),               \
+             clamp(x.z, min.z, max.z));                                        \
+  }
+
+namespace math {
+VEC_CLAMP_FN(Vec3u)
+VEC_CLAMP_FN(Vec3i)
+VEC_CLAMP_FN(Vec3f)
+
+inline constexpr float dot(Vec3f a, Vec3f b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+inline constexpr Vec3f cross(Vec3f a, Vec3f b) {
+  return Vec3f(a.y * b.z - a.z * b.y, -(a.x * b.z - a.z * b.x),
+               a.x * b.y - a.y * b.x);
+}
+
+inline constexpr float length(Vec3f x) { return std::sqrt(dot(x, x)); }
+inline constexpr Vec3f normalize(Vec3f x) { return x / length(x); }
+} // namespace math
+
+#undef VEC_CLAMP_FN
