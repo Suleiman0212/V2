@@ -3,9 +3,10 @@
 #include "script/ast.hpp"
 #include "script/cell.hpp"
 #include "script/lexer.hpp"
+#include "script/token_iterator.hpp"
+#include "script/vm.hpp"
 #include "util.hpp"
 #include <algorithm>
-#include <cmath>
 #include <format>
 #include <optional>
 #include <span>
@@ -25,49 +26,13 @@ std::optional<Script> Parser::parse(std::span<const Token> tokens,
 }
 
 Parser::Parser(std::span<const Token> tokens, Script &script)
-    : tokens(tokens), script(script) {
+    : TokenIterator(tokens), script(script), const_vm(script) {
   // copy constants from the registry
   for (const auto &const_decl : script.registry.consts) {
     consts.emplace_back(const_decl.name, const_decl.value, 0);
   }
-}
-
-bool Parser::is_eof() { return check(TokenType::Eof); }
-
-const Token &Parser::peek() { return tokens[token_idx]; }
-
-const Token &Parser::peek_prev() { return tokens[token_idx - 1]; }
-
-const Token &Parser::peek_next() {
-  if (is_eof())
-    return peek();
-  return tokens[token_idx + 1];
-}
-
-bool Parser::check(TokenType type) { return peek().type == type; }
-
-const Token &Parser::next() {
-  if (!is_eof())
-    token_idx++;
-  return peek_prev();
-}
-
-bool Parser::match(TokenType type) {
-  if (check(type)) {
-    next();
-    return true;
-  }
-  return false;
-}
-
-bool Parser::match(std::initializer_list<TokenType> types) {
-  for (auto type : types) {
-    if (check(type)) {
-      next();
-      return true;
-    }
-  }
-  return false;
+  // HACK: push an empty call frame to the const folding vm to prevent a crash
+  const_vm.frames.emplace_back();
 }
 
 const Token *Parser::expect(TokenType type) {
@@ -674,14 +639,11 @@ void Parser::fn_decl() {
 
     // type
     expect(TokenType::Colon);
-    if (auto token = expect(TokenType::Identifier)) {
-      const auto &type_name = token->as_string();
-      if (type_name == "number") {
-        type = ScriptCellType::Number;
-      } else if (type_name == "string") {
-        type = ScriptCellType::String;
-      } else {
-        throw_error(std::format("unknown type name \"{}\"", type_name),
+    if (auto token = expect(TokenType::CellType)) {
+      type = token->as_cell_type();
+      if (type == ScriptCellType::Void || type == ScriptCellType::FnHandle) {
+        throw_error(std::format("{} can't be used as a parameter type",
+                                cell_type_name(type)),
                     token->line, token->col);
       }
     }
@@ -712,88 +674,41 @@ void Parser::top_level() {
 }
 
 void Parser::fold_consts(AstNodePtr &node) {
-  auto is_num_literal = [](AstNodePtr &node) {
-    return node->get_type() == AstNodeType::Literal &&
-           node->value_type == ScriptCellType::Number;
-  };
-
   switch (node->get_type()) {
   case AstNodeType::Unary: {
     auto unary = static_cast<AstNodeUnary *>(node.get());
     fold_consts(unary->value);
-    if (!is_num_literal(unary->value))
+    if (!unary->value->is_num_literal())
       return;
-    auto value_node = static_cast<AstNodeLiteral *>(unary->value.get());
 
-    ScriptCell value = value_node->value;
-    switch (unary->op) {
-    case UnaryOp::Group:
-      break;
-    case UnaryOp::Not:
-      value = !value;
-      break;
-    case UnaryOp::Negate:
-      value = -value;
-      break;
-    }
-    node = new_node<AstNodeLiteral>(ScriptCellType::Number, value);
+    node =
+        new_node<AstNodeLiteral>(ScriptCellType::Number, const_vm.eval(node));
     break;
   }
   case AstNodeType::Binary: {
     auto binary = static_cast<AstNodeBinary *>(node.get());
     fold_consts(binary->lhs);
     fold_consts(binary->rhs);
-    if (!is_num_literal(binary->lhs) || !is_num_literal(binary->rhs))
+    if (!binary->lhs->is_num_literal() || !binary->rhs->is_num_literal())
       return;
-    auto lhs = static_cast<AstNodeLiteral *>(binary->lhs.get());
-    auto rhs = static_cast<AstNodeLiteral *>(binary->rhs.get());
 
-    ScriptCell value;
-    switch (binary->op) {
-    case BinaryOp::Add:
-      value = lhs->value + rhs->value;
-      break;
-    case BinaryOp::Sub:
-      value = lhs->value - rhs->value;
-      break;
-    case BinaryOp::Mul:
-      value = lhs->value * rhs->value;
-      break;
-    case BinaryOp::Div:
-      value = lhs->value / rhs->value;
-      break;
-    case BinaryOp::Mod:
-      value = std::fmod(lhs->value, rhs->value);
-      break;
-
-    case BinaryOp::Eq:
-      value = lhs->value == rhs->value;
-      break;
-    case BinaryOp::NotEq:
-      value = lhs->value != rhs->value;
-      break;
-    case BinaryOp::Less:
-      value = lhs->value < rhs->value;
-      break;
-    case BinaryOp::LessEq:
-      value = lhs->value <= rhs->value;
-      break;
-    case BinaryOp::Greater:
-      value = lhs->value > rhs->value;
-      break;
-    case BinaryOp::GreaterEq:
-      value = lhs->value >= rhs->value;
-      break;
-
-    case BinaryOp::And:
-      value = lhs->value && rhs->value;
-      break;
-    case BinaryOp::Or:
-      value = lhs->value || rhs->value;
-      break;
+    node =
+        new_node<AstNodeLiteral>(ScriptCellType::Number, const_vm.eval(node));
+    break;
+  }
+  case AstNodeType::NativeCall: {
+    auto native_call = static_cast<AstNodeNativeCall *>(node.get());
+    bool can_fold = script.registry.native_fns[native_call->idx].is_const;
+    for (auto &param : native_call->params) {
+      fold_consts(param);
+      if (!param->is_num_literal())
+        can_fold = false;
     }
+    if (!can_fold)
+      return;
 
-    node = new_node<AstNodeLiteral>(ScriptCellType::Number, value);
+    node =
+        new_node<AstNodeLiteral>(ScriptCellType::Number, const_vm.eval(node));
     break;
   }
   default:

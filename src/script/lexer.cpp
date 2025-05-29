@@ -1,8 +1,11 @@
 #include "script/lexer.hpp"
 #include "log.hpp"
+#include "script/cell.hpp"
 #include <charconv>
 #include <format>
+#include <optional>
 #include <string>
+#include <string_view>
 
 std::string_view Token::type_name(TokenType type) {
   switch (type) {
@@ -92,6 +95,8 @@ std::string_view Token::type_name(TokenType type) {
     return "number";
   case TokenType::StringLiteral:
     return "string";
+  case TokenType::CellType:
+    return "type";
   }
   return "<?>";
 }
@@ -265,8 +270,23 @@ Token Lexer::read_identifier() {
     return emit(TokenType::True);
   } else if (identifier == "while") {
     return emit(TokenType::While);
+  } else if (auto type_token = read_cell_type(identifier)) {
+    return *type_token;
   }
   return emit(TokenType::Identifier, identifier);
+}
+
+std::optional<Token> Lexer::read_cell_type(std::string_view identifier) {
+  if (identifier == "void") {
+    return emit(TokenType::CellType, ScriptCellType::Void);
+  } else if (identifier == "number") {
+    return emit(TokenType::CellType, ScriptCellType::Number);
+  } else if (identifier == "string") {
+    return emit(TokenType::CellType, ScriptCellType::String);
+  } else if (identifier == "fn_handle") {
+    return emit(TokenType::CellType, ScriptCellType::FnHandle);
+  }
+  return std::nullopt;
 }
 
 Token Lexer::emit(TokenType type) {
@@ -279,6 +299,10 @@ Token Lexer::emit(TokenType type, double value) {
 
 Token Lexer::emit(TokenType type, std::string_view value) {
   return Token(type, std::string(value), token_line, token_col);
+}
+
+Token Lexer::emit(TokenType type, ScriptCellType value) {
+  return Token(type, value, token_line, token_col);
 }
 
 bool Lexer::is_eof() { return pos >= source.size(); }

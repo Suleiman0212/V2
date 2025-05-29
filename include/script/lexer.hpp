@@ -1,5 +1,6 @@
 #pragma once
 
+#include "script/cell.hpp"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -54,6 +55,7 @@ enum class TokenType {
 
   NumberLiteral, // double value
   StringLiteral, // string value
+  CellType,      // cell type value
 };
 
 struct Token {
@@ -62,9 +64,12 @@ struct Token {
   std::string_view type_name() const { return type_name(type); }
   double as_double() const { return std::get<double>(value); }
   const std::string &as_string() const { return std::get<std::string>(value); }
+  ScriptCellType as_cell_type() const {
+    return std::get<ScriptCellType>(value);
+  }
 
   TokenType type;
-  std::variant<std::monostate, double, std::string> value;
+  std::variant<std::monostate, double, std::string, ScriptCellType> value;
   int line, col;
 };
 
@@ -79,10 +84,12 @@ private:
   std::optional<Token> read_number();
   std::optional<Token> read_string();
   Token read_identifier();
+  std::optional<Token> read_cell_type(std::string_view identifier);
 
   Token emit(TokenType type);
   Token emit(TokenType type, double value);
   Token emit(TokenType type, std::string_view value);
+  Token emit(TokenType type, ScriptCellType value);
 
   bool is_eof();
   char peek();

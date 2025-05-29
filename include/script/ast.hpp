@@ -54,6 +54,7 @@ struct AstNode {
   virtual ~AstNode() = default;
 
   virtual AstNodeType get_type() const = 0;
+  virtual bool is_num_literal() const { return false; }
 
   ScriptCellType value_type = ScriptCellType::Void;
 };
@@ -76,6 +77,9 @@ struct AstNodeLiteral : AstNode {
       : AstNode(type), value(value) {}
 
   AstNodeType get_type() const override { return AstNodeType::Literal; }
+  bool is_num_literal() const override {
+    return value_type == ScriptCellType::Number;
+  }
 
   ScriptCell value;
 };

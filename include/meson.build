@@ -18,6 +18,7 @@ headers = [
   'script/ast.hpp',
   'script/cell.hpp',
   'script/lexer.hpp',
+  'script/token_iterator.hpp',
   'script/parser.hpp',
   'script/registry.hpp',
   'script/vm.hpp',

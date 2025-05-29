@@ -1,12 +1,12 @@
 #pragma once
 
-#include <optional>
-#include <span>
-#include <string_view>
-#include <vector>
 #include "ast.hpp"
 #include "cell.hpp"
+#include "registry.hpp"
 #include "script.hpp"
+#include <optional>
+#include <string_view>
+#include <vector>
 
 enum class ScriptVmStatus {
   Stopped,
@@ -21,7 +21,7 @@ public:
   ScriptVmStatus get_status() const;
 
   std::optional<size_t> lookup_fn(std::string_view name) const;
-  void call(size_t idx, std::span<const ScriptCell> params = {});
+  void call(size_t idx, ScriptParams params = {});
   void yield();
   void resume();
 
@@ -37,7 +37,7 @@ private:
     size_t start_idx;
   };
 
-  void call_inner(size_t idx, std::span<const ScriptCell> params);
+  void call_inner(size_t idx, ScriptParams params);
   void exec();
 
   ScriptCell eval(const AstNodePtr &node);
@@ -47,4 +47,6 @@ private:
   ScriptVmStatus status = ScriptVmStatus::Stopped;
   std::vector<CallFrame> frames;
   std::vector<const AstNodePtr *> exec_stack;
+
+  friend class Parser;
 };

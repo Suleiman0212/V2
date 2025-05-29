@@ -25,7 +25,9 @@ depends = [dependency('glfw3')]
 
 subdir('include/')
 
-shared_library('v2', sources,
+shared_library(
+  'v2',
+  sources,
   cpp_args: '-std=c++20',
   include_directories: include_dirs,
   dependencies: depends,

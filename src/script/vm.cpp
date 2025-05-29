@@ -1,6 +1,7 @@
 #include "script/vm.hpp"
 #include "script/ast.hpp"
 #include "script/cell.hpp"
+#include "script/registry.hpp"
 #include "script/script.hpp"
 #include <array>
 #include <cmath>
@@ -22,7 +23,7 @@ std::optional<size_t> ScriptVm::lookup_fn(std::string_view name) const {
   return script.lookup_fn(name);
 }
 
-void ScriptVm::call(size_t idx, std::span<const ScriptCell> params) {
+void ScriptVm::call(size_t idx, ScriptParams params) {
   const auto &fn = script.fns[idx];
   if (params.size() != fn.param_types.size()) {
     throw std::runtime_error(
@@ -49,7 +50,7 @@ const std::string &ScriptVm::get_string(ScriptCell idx) const {
   return script.str_table[idx];
 }
 
-void ScriptVm::call_inner(size_t idx, std::span<const ScriptCell> params) {
+void ScriptVm::call_inner(size_t idx, ScriptParams params) {
   frames.emplace_back(std::vector(params.begin(), params.end()));
   exec_stack.push_back(&call_epilogue_marker);
   exec_stack.push_back(&script.fns[idx].body);

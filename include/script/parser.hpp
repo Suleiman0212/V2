@@ -5,7 +5,8 @@
 #include "lexer.hpp"
 #include "registry.hpp"
 #include "script.hpp"
-#include <initializer_list>
+#include "token_iterator.hpp"
+#include "vm.hpp"
 #include <memory>
 #include <optional>
 #include <span>
@@ -13,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-class Parser {
+class Parser : public TokenIterator {
 public:
   static std::optional<Script> parse(std::span<const Token> tokens,
                                      const ScriptRegistry &registry);
@@ -42,15 +43,6 @@ private:
 
   Parser(std::span<const Token> tokens, Script &script);
 
-  bool is_eof();
-  const Token &peek();
-  const Token &peek_prev();
-  const Token &peek_next();
-  bool check(TokenType type);
-
-  const Token &next();
-  bool match(TokenType type);
-  bool match(std::initializer_list<TokenType> types);
   const Token *expect(TokenType type);
 
   std::optional<size_t> lookup_const(std::string_view name);
@@ -98,10 +90,8 @@ private:
   bool has_error();
   void throw_error(std::string_view msg, int line = 0, int col = 0);
 
-  std::span<const Token> tokens;
-  size_t token_idx = 0;
-
   Script &script;
+  ScriptVm const_vm;
   size_t scope_depth = 0;
   std::vector<Const> consts;
   std::vector<Var> vars;

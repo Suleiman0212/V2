@@ -5,6 +5,7 @@
 #include "script/registry.hpp"
 #include "script/vm.hpp"
 #include <cmath>
+#include <format>
 #include <span>
 #include <string>
 #include <string_view>
@@ -14,27 +15,24 @@ using UnaryMathFn = ScriptCell (*)(ScriptCell);
 template <UnaryMathFn F>
 void add_unary_math_fn(ScriptRegistry &registry, std::string_view name) {
   registry.add_native_fn(
-      name, ScriptCellType::Number, {ScriptCellType::Number},
-      [](auto, std::span<const ScriptCell> params) { return F(params[0]); });
+      std::format("number {}(number) const", name),
+      [](auto, ScriptParams params) { return F(params[0]); });
 }
 
 using BinaryMathFn = ScriptCell (*)(ScriptCell, ScriptCell);
 template <BinaryMathFn F>
 void add_binary_math_fn(ScriptRegistry &registry, std::string_view name) {
-  registry.add_native_fn(name, ScriptCellType::Number,
-                         {ScriptCellType::Number, ScriptCellType::Number},
-                         [](auto, std::span<const ScriptCell> params) {
-                           return F(params[0], params[1]);
-                         });
+  registry.add_native_fn(
+      std::format("number {}(number, number) const", name),
+      [](auto, ScriptParams params) { return F(params[0], params[1]); });
 }
 
 using TernaryMathFn = ScriptCell (*)(ScriptCell, ScriptCell, ScriptCell);
 template <TernaryMathFn F>
 void add_ternary_math_fn(ScriptRegistry &registry, std::string_view name) {
   registry.add_native_fn(
-      name, ScriptCellType::Number,
-      {ScriptCellType::Number, ScriptCellType::Number, ScriptCellType::Number},
-      [](auto, std::span<const ScriptCell> params) {
+      std::format("number {}(number, number, number) const", name),
+      [](auto, ScriptParams params) {
         return F(params[0], params[1], params[2]);
       });
 }
@@ -63,33 +61,34 @@ void ScriptRegistry::load_std_library() {
   add_ternary_math_fn<math::clamp>(*this, "clamp");
   add_ternary_math_fn<std::lerp>(*this, "lerp");
 
-  add_native_fn("print_int", ScriptCellType::Void, {ScriptCellType::Number},
-                [](auto, std::span<const ScriptCell> params) {
-                  trace::debug(std::to_string((int)params[0]));
-                  return 0.0;
-                });
+  add_native_fn("void print_int(number)", [](auto, ScriptParams params) {
+    trace::debug(std::to_string((int)params[0]));
+    return 0.0;
+  });
 
-  add_native_fn("print_float", ScriptCellType::Void, {ScriptCellType::Number},
-                [](auto, std::span<const ScriptCell> params) {
-                  trace::debug(std::to_string(params[0]));
-                  return 0.0;
-                });
+  add_native_fn("void print_float(number)", [](auto, ScriptParams params) {
+    trace::debug(std::to_string(params[0]));
+    return 0.0;
+  });
 
-  add_native_fn("print_string", ScriptCellType::Void, {ScriptCellType::String},
-                [](ScriptVm &vm, std::span<const ScriptCell> params) {
+  add_native_fn("void print_string(string)",
+                [](ScriptVm &vm, ScriptParams params) {
                   trace::debug(vm.get_string(params[0]));
                   return 0.0;
                 });
 
-  add_native_fn("rand_int_range", ScriptCellType::Number,
-                {ScriptCellType::Number, ScriptCellType::Number},
-                [](ScriptVm &, std::span<const ScriptCell> params) {
+  add_native_fn("number rand_int_range(number, number)",
+                [](auto, ScriptParams params) {
                   return rng::next_int_range(params[0], params[1]);
                 });
 
-  add_native_fn("rand_float_range", ScriptCellType::Number,
-                {ScriptCellType::Number, ScriptCellType::Number},
-                [](ScriptVm &, std::span<const ScriptCell> params) {
+  add_native_fn("number rand_float_range(number, number)",
+                [](auto, ScriptParams params) {
                   return rng::next_float_range(params[0], params[1]);
                 });
+
+  add_native_fn("void yield()", [](ScriptVm &vm, auto) {
+    vm.yield();
+    return 0.0;
+  });
 }
