@@ -2,7 +2,6 @@
 
 #include "misc.hpp"
 #include <cmath>
-#include <cstdint>
 
 #define VEC_BASE_IMPL(name, T)                                                 \
   constexpr name() : x(0), y(0), z(0), w(0) {}                                 \

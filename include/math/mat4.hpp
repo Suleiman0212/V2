@@ -23,8 +23,8 @@ struct Mat4f {
 
   static constexpr Mat4f rotation_z(float angle) {
     float s = std::sin(angle), c = std::cos(angle);
-    return Mat4f(c,   -s,    0.0f, 0.0f, 
-                 s,    c,    0.0f, 0.0f, 
+    return Mat4f(c,    s,    0.0f, 0.0f, 
+                -s,    c,    0.0f, 0.0f, 
                  0.0f, 0.0f, 1.0f, 0.0f, 
                  0.0f, 0.0f, 0.0f, 1.0f);
   }
@@ -106,16 +106,16 @@ struct Mat4f {
 
   constexpr Vec2f operator*(Vec2f rhs) const {
     Vec2f r;
-    r.x = m00 * rhs.x + m10 * rhs.y;
-    r.y = m01 * rhs.x + m11 * rhs.y;
+    r.x = m00 * rhs.x + m10 * rhs.y + m30;
+    r.y = m01 * rhs.x + m11 * rhs.y + m31;
     return r;
   }
 
   constexpr Vec3f operator*(Vec3f rhs) const {
     Vec3f r;
-    r.x = m00 * rhs.x + m10 * rhs.y + m20 * rhs.z;
-    r.y = m01 * rhs.x + m11 * rhs.y + m21 * rhs.z;
-    r.z = m02 * rhs.x + m12 * rhs.y + m22 * rhs.z;
+    r.x = m00 * rhs.x + m10 * rhs.y + m20 * rhs.z + m30;
+    r.y = m01 * rhs.x + m11 * rhs.y + m21 * rhs.z + m31;
+    r.z = m02 * rhs.x + m12 * rhs.y + m22 * rhs.z + m32;
     return r;
   }
 
